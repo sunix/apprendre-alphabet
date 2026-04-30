@@ -337,7 +337,8 @@
     <button class="mode-btn lang-btn" data-lang="es" aria-label="Español">🇪🇸</button>
     <button class="mode-btn lang-btn" data-lang="de" aria-label="Deutsch">🇩🇪</button>
     <button class="mode-btn lang-btn" data-lang="it" aria-label="Italiano">🇮🇹</button>
-    <button class="mode-btn lang-btn" data-lang="ja" aria-label="日本語">🇯🇵</button>
+    <button class="mode-btn lang-btn" data-lang="ja" aria-label="ひらがな">🇯🇵あ</button>
+    <button class="mode-btn lang-btn" data-lang="kt" aria-label="カタカナ">🇯🇵カ</button>
     <button class="mode-btn lang-btn" data-lang="ru" aria-label="Русский">🇷🇺</button>
     <button class="mode-btn lang-btn" data-lang="uk" aria-label="Українська">🇺🇦</button>
   </div>
@@ -378,6 +379,36 @@
   </div>
 
   <script>
+    // ─── Romaji ↔ Katakana lookup tables ─────────────────────────────────────
+    // Used by feedRomaji() and getLowerDisplay() for the Katakana language.
+    const ROMAJI_KATAKANA_MAP = {
+      'a':'\u30a2','i':'\u30a4','u':'\u30a6','e':'\u30a8','o':'\u30aa',
+      'ka':'\u30ab','ki':'\u30ad','ku':'\u30af','ke':'\u30b1','ko':'\u30b3',
+      'sa':'\u30b5','si':'\u30b7','shi':'\u30b7','su':'\u30b9','se':'\u30bb','so':'\u30bd',
+      'ta':'\u30bf','ti':'\u30c1','chi':'\u30c1','tu':'\u30c4','tsu':'\u30c4','te':'\u30c6','to':'\u30c8',
+      'na':'\u30ca','ni':'\u30cb','nu':'\u30cc','ne':'\u30cd','no':'\u30ce',
+      'ha':'\u30cf','hi':'\u30d2','hu':'\u30d5','fu':'\u30d5','he':'\u30d8','ho':'\u30db',
+      'ma':'\u30de','mi':'\u30df','mu':'\u30e0','me':'\u30e1','mo':'\u30e2',
+      'ya':'\u30e4','yu':'\u30e6','yo':'\u30e8',
+      'ra':'\u30e9','ri':'\u30ea','ru':'\u30eb','re':'\u30ec','ro':'\u30ed',
+      'wa':'\u30ef','wo':'\u30f2',
+      'nn':'\u30f3',
+    };
+
+    // Katakana → canonical romaji for the lower-case display span.
+    const KATAKANA_ROMAJI = {
+      '\u30a2':'a',  '\u30a4':'i',  '\u30a6':'u',  '\u30a8':'e',  '\u30aa':'o',
+      '\u30ab':'ka', '\u30ad':'ki', '\u30af':'ku', '\u30b1':'ke', '\u30b3':'ko',
+      '\u30b5':'sa', '\u30b7':'shi','\u30b9':'su', '\u30bb':'se', '\u30bd':'so',
+      '\u30bf':'ta', '\u30c1':'chi','\u30c4':'tsu','\u30c6':'te', '\u30c8':'to',
+      '\u30ca':'na', '\u30cb':'ni', '\u30cc':'nu', '\u30cd':'ne', '\u30ce':'no',
+      '\u30cf':'ha', '\u30d2':'hi', '\u30d5':'fu', '\u30d8':'he', '\u30db':'ho',
+      '\u30de':'ma', '\u30df':'mi', '\u30e0':'mu', '\u30e1':'me', '\u30e2':'mo',
+      '\u30e4':'ya', '\u30e6':'yu', '\u30e8':'yo',
+      '\u30e9':'ra', '\u30ea':'ri', '\u30eb':'ru', '\u30ec':'re', '\u30ed':'ro',
+      '\u30ef':'wa', '\u30f2':'wo', '\u30f3':'nn',
+    };
+
     // ─── Language definitions ─────────────────────────────────────────────────
     const LANGUAGES = {
       fr: {
@@ -614,6 +645,45 @@
         pageTitle:   '\u3072\u3089\u304c\u306a\u3092\u304a\u307c\u3048\u3088\u3046',
         htmlLang:    'ja',
       },
+      kt: {
+        speechCode: 'ja-JP',
+        alphabet: '\u30a2\u30a4\u30a6\u30a8\u30aa\u30ab\u30ad\u30af\u30b1\u30b3\u30b5\u30b7\u30b9\u30bb\u30bd\u30bf\u30c1\u30c4\u30c6\u30c8\u30ca\u30cb\u30cc\u30cd\u30ce\u30cf\u30d2\u30d5\u30d8\u30db\u30de\u30df\u30e0\u30e1\u30e2\u30e4\u30e6\u30e8\u30e9\u30ea\u30eb\u30ec\u30ed\u30ef\u30f2\u30f3',
+        hintExplore: '\u30ed\u30fc\u30de\u5b57\u3092\u5165\u529b\u3057\u3066\u306d\uff01(\u4f8b: mi \u2192 \u30df, nn \u2192 \u30f3)',
+        hintQuiz: {
+          digits:  '\u6b63\u3057\u3044\u6570\u5b57\u3092\u62bc\u3057\u3066\u306d\uff01',
+          letters: '\u30ed\u30fc\u30de\u5b57\u3067\u5165\u529b\u304b\u30af\u30ea\u30c3\u30af\uff01(\u4f8b: mi \u2192 \u30df)',
+          both:    '\u30ed\u30fc\u30de\u5b57\u3067\u5165\u529b\u304b\u30af\u30ea\u30c3\u30af\uff01',
+        },
+        contentLabel: {
+          digits:  ['\u6570\u5b57',     '\u6570\u5b57'],
+          letters: ['\u30ab\u30bf\u30ab\u30ca', '\u30ab\u30bf\u30ab\u30ca'],
+          both:    ['\u6587\u5b57',     '\u6587\u5b57'],
+        },
+        celebTitle: '\ud83c\udf89 \u3059\u3054\u3044\uff01',
+        celebText: {
+          digits:  '\u3059\u3079\u3066\u306e\u6570\u5b57\u3092\u5165\u529b\u3057\u307e\u3057\u305f\uff01',
+          letters: '\u3059\u3079\u3066\u306e\u30ab\u30bf\u30ab\u30ca\u3092\u5165\u529b\u3057\u307e\u3057\u305f\uff01',
+          both:    '\u3059\u3079\u3066\u306e\u30ab\u30bf\u30ab\u30ca\u3068\u6570\u5b57\u3092\u5165\u529b\u3057\u307e\u3057\u305f\uff01',
+        },
+        quizFoundAll: {
+          digits:  '\u3059\u3079\u3066\u306e\u6570\u5b57',
+          letters: '\u3059\u3079\u3066\u306e\u30ab\u30bf\u30ab\u30ca',
+          both:    '\u3059\u3079\u3066\u306e\u30ab\u30bf\u30ab\u30ca\u3068\u6570\u5b57',
+        },
+        wasIt:    ch => `\u6b63\u89e3\u306f: ${ch}(${KATAKANA_ROMAJI[ch] || ''}) \u2014 \u7d9a\u3051\u3066\uff01`,
+        tryAgain: '\u3082\u3046\u4e00\u5ea6\uff01',
+        correct:  '\ud83c\udf89 \u6b63\u89e3\uff01',
+        quizScoreMsg: (found, score, total) =>
+          `${found}\u3092\u898b\u3064\u3051\u307e\u3057\u305f\uff01 \u30b9\u30b3\u30a2: ${score} / ${total}`,
+        restartBtn:  '\u3082\u3046\u4e00\u5ea6',
+        lettersBtn:  '\ud83d\udd24 \u30ab\u30bf\u30ab\u30ca',
+        digitsBtn:   '\ud83d\udd22 \u6570\u5b57',
+        bothBtn:     '\ud83d\udcda \u4e21\u65b9',
+        exploreBtn:  '\ud83d\udd0d \u63a2\u7d22',
+        quizBtn:     '\ud83c\udfaf \u30af\u30a4\u30ba',
+        pageTitle:   '\u30ab\u30bf\u30ab\u30ca\u3092\u304a\u307c\u3048\u3088\u3046',
+        htmlLang:    'ja',
+      },
       ru: {
         speechCode: 'ru-RU',
         alphabet: '\u0410\u0411\u0412\u0413\u0414\u0415\u0401\u0416\u0417\u0418\u0419\u041a\u041b\u041c\u041d\u041e\u041f\u0420\u0421\u0422\u0423\u0424\u0425\u0426\u0427\u0428\u0429\u042a\u042b\u042c\u042d\u042e\u042f',
@@ -705,6 +775,68 @@
     function normalizeKey(rawKey) {
       if (rawKey === '\u00df' || rawKey === '\u1e9e') return '\u00df';
       return rawKey.toUpperCase();
+    }
+
+    // ─── Romaji input buffer (Katakana language) ─────────────────────────────
+    // Accumulates typed Latin letters and converts them to a Katakana character
+    // using ROMAJI_KATAKANA_MAP.  Returns the matched character or null.
+    // Special handling for 'n':
+    //   nn          → ン
+    //   n + vowel   → na-row syllable (na, ni, nu, ne, no)
+    //   n + consonant → emit ン, start a new buffer with that consonant
+    let romajiBuffer = '';
+
+    function feedRomaji(letter) {
+      const ch = letter.toLowerCase();
+
+      // Pending lone 'n' in the buffer
+      if (romajiBuffer === 'n') {
+        if (ch === 'n') {
+          romajiBuffer = '';
+          return '\u30f3'; // ン
+        }
+        if (!'aeiou'.includes(ch)) {
+          // n + consonant → emit ン, restart buffer with this consonant
+          romajiBuffer = ch;
+          return '\u30f3'; // ン
+        }
+        // n + vowel → na / ni / nu / ne / no
+        romajiBuffer += ch;
+        const m = ROMAJI_KATAKANA_MAP[romajiBuffer];
+        if (m) { romajiBuffer = ''; return m; }
+        romajiBuffer = '';
+        return null;
+      }
+
+      romajiBuffer += ch;
+
+      // Exact match
+      const match = ROMAJI_KATAKANA_MAP[romajiBuffer];
+      if (match) { romajiBuffer = ''; return match; }
+
+      // Lone 'n': wait for the next character
+      if (romajiBuffer === 'n') return null;
+
+      // Still a valid prefix of some romaji sequence?
+      if (Object.keys(ROMAJI_KATAKANA_MAP).some(k => k.startsWith(romajiBuffer))) return null;
+
+      // Dead end: reset and try this character as a fresh start
+      romajiBuffer = ch;
+      const fresh = ROMAJI_KATAKANA_MAP[ch];
+      if (fresh) { romajiBuffer = ''; return fresh; }
+      if (!Object.keys(ROMAJI_KATAKANA_MAP).some(k => k.startsWith(ch))) romajiBuffer = '';
+      return null;
+    }
+
+    // Returns the string to display in the lower span of the letter card.
+    // • Digits       → '' (no lower display)
+    // • Katakana     → canonical romaji from KATAKANA_ROMAJI (e.g. ミ → 'mi')
+    // • Other chars  → lowercase if different (e.g. A → 'a', А → 'а')
+    function getLowerDisplay(ch) {
+      if (/^[0-9]$/.test(ch)) return '';
+      if (currentLangKey === 'kt') return KATAKANA_ROMAJI[ch] || '';
+      const lowerCh = ch.toLowerCase();
+      return lowerCh !== ch ? lowerCh : '';
     }
 
     // ─── Palette: one colour per letter/digit ───────────────────────────────
@@ -910,7 +1042,7 @@
       letterCard.style.setProperty('--glow', color);
       letterUpper.textContent = ch;
       const lowerCh = ch.toLowerCase();
-      letterLower.textContent = /^[0-9]$/.test(ch) ? '' : (lowerCh !== ch ? lowerCh : '');
+      letterLower.textContent = getLowerDisplay(ch);
 
       // Pop animation (re-trigger)
       letterCard.classList.remove('pop');
@@ -942,6 +1074,29 @@
     document.addEventListener('keydown', e => {
       // Resume audio context (required by browser autoplay policy)
       if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      // Romaji input for the Katakana language (e.g. typing "mi" → ミ)
+      if (currentLangKey === 'kt' && /^[a-zA-Z]$/.test(e.key)) {
+        const kana = feedRomaji(e.key);
+        if (!kana) return; // still accumulating the romaji sequence
+        const charset = getCharset();
+        if (!charset.includes(kana)) return;
+        if (quizMode) {
+          handleQuizKey(kana);
+        } else {
+          showLetter(kana);
+          typed.add(kana);
+          updateProgress();
+          if (typed.size === charset.length) {
+            setTimeout(() => {
+              playCelebration();
+              spawnConfetti(CONFETTI_COUNT_CELEBRATION);
+              celebration.classList.add('show');
+            }, 400);
+          }
+        }
+        return;
+      }
 
       const key = normalizeKey(e.key);
       const charset = getCharset();
@@ -997,6 +1152,7 @@
     btnQuiz.addEventListener('click', () => setMode('quiz'));
 
     function startQuiz() {
+      romajiBuffer = '';
       quizScore = 0;
       // Fisher-Yates shuffle for unbiased character order
       const charset = getCharset();
@@ -1068,8 +1224,7 @@
 
       letterCard.style.setProperty('--glow', color);
       letterUpper.textContent = ch;
-      const lowerCh = ch.toLowerCase();
-      letterLower.textContent = /^[0-9]$/.test(ch) ? '' : (lowerCh !== ch ? lowerCh : '');
+      letterLower.textContent = getLowerDisplay(ch);
 
       letterCard.classList.remove('pop');
       void letterCard.offsetWidth; // reflow to restart animation
@@ -1154,6 +1309,7 @@
 
     // ─── Restart ─────────────────────────────────────────────────────────────
     function restart() {
+      romajiBuffer = '';
       typed.clear();
       letterUpper.textContent = '?';
       letterLower.textContent = '';
