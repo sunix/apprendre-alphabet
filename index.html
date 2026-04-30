@@ -533,7 +533,9 @@
     });
 
     // ─── Quiz mode ───────────────────────────────────────────────────────────
-    const QUIZ_DURATION = 30;
+    const QUIZ_DURATION   = 30;
+    const BUZZ_FREQUENCY  = 180;
+    const BUZZ_WAVEFORM   = 'sawtooth';
 
     let quizMode          = false;
     let quizTarget        = '';
@@ -563,7 +565,12 @@
 
     function startQuiz() {
       quizScore = 0;
-      quizRemaining = ALPHABET.split('').sort(() => Math.random() - .5);
+      // Fisher-Yates shuffle for unbiased letter order
+      quizRemaining = ALPHABET.split('');
+      for (let i = quizRemaining.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [quizRemaining[i], quizRemaining[j]] = [quizRemaining[j], quizRemaining[i]];
+      }
       quizTimerWrap.style.display = 'block';
       quizInfoEl.style.display = 'flex';
       alphabetRow.classList.add('quiz-active');
@@ -626,7 +633,7 @@
       letterLower.textContent = ch.toLowerCase();
 
       letterCard.classList.remove('pop');
-      void letterCard.offsetWidth;
+      void letterCard.offsetWidth; // reflow to restart animation
       letterCard.classList.add('pop');
 
       hint.textContent = 'Appuie sur la bonne lettre\u00a0!';
@@ -651,9 +658,9 @@
       quizLocked = true;
 
       letterCard.classList.remove('shake');
-      void letterCard.offsetWidth;
+      void letterCard.offsetWidth; // reflow to restart animation
       letterCard.classList.add('shake');
-      playTone(180, 'sawtooth', 0.4);
+      playTone(BUZZ_FREQUENCY, BUZZ_WAVEFORM, 0.4);
 
       hint.textContent = `C'était\u00a0: ${quizTarget} \u2014 Continue\u00a0!`;
 
@@ -674,7 +681,7 @@
 
         // Celebrate correct answer
         letterCard.classList.remove('pop');
-        void letterCard.offsetWidth;
+        void letterCard.offsetWidth; // reflow to restart animation
         letterCard.classList.add('pop');
         playLetterSound(ALPHABET.indexOf(key));
         spawnConfetti(CONFETTI_COUNT_SMALL);
@@ -693,9 +700,9 @@
       } else {
         // Wrong answer
         letterCard.classList.remove('shake');
-        void letterCard.offsetWidth;
+        void letterCard.offsetWidth; // reflow to restart animation
         letterCard.classList.add('shake');
-        playTone(180, 'sawtooth', 0.2);
+        playTone(BUZZ_FREQUENCY, BUZZ_WAVEFORM, 0.2);
         hint.textContent = 'Essaie encore\u00a0!';
         setTimeout(() => {
           if (!quizLocked) hint.textContent = 'Appuie sur la bonne lettre\u00a0!';
