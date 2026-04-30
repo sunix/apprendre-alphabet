@@ -288,17 +288,17 @@
       animation: shake .4s cubic-bezier(.36,.07,.19,.97);
     }
 
-    /* ─── Clickable dot in quiz mode ─── */
-    .quiz-active .alpha-dot {
+    /* ─── Clickable dot in explore and quiz mode ─── */
+    .alpha-dot {
       cursor: pointer;
     }
 
-    .quiz-active .alpha-dot:hover {
+    .alpha-dot:hover {
       background: rgba(255,255,255,.18);
       transform: scale(1.12);
     }
 
-    .quiz-active .alpha-dot:active {
+    .alpha-dot:active {
       transform: scale(.92);
     }
 
@@ -648,9 +648,22 @@
         dot.textContent = ch;
         dot.style.setProperty('--dot-color', COLORS[i % COLORS.length]);
         dot.addEventListener('click', () => {
-          if (!quizMode) return;
           if (audioCtx.state === 'suspended') audioCtx.resume();
-          handleQuizKey(ch);
+          if (quizMode) {
+            handleQuizKey(ch);
+          } else {
+            showLetter(ch);
+            typed.add(ch);
+            updateProgress();
+            const charset = getCharset();
+            if (typed.size === charset.length) {
+              setTimeout(() => {
+                playCelebration();
+                spawnConfetti(CONFETTI_COUNT_CELEBRATION);
+                celebration.classList.add('show');
+              }, 400);
+            }
+          }
         });
         alphabetRow.appendChild(dot);
       });
