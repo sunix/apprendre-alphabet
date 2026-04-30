@@ -200,17 +200,116 @@
       from { transform: translateY(0); }
       to   { transform: translateY(-18px); }
     }
+
+    /* ─── Mode toggle ─── */
+    #mode-toggle {
+      position: fixed;
+      top: .8rem;
+      right: .8rem;
+      z-index: 5;
+      display: flex;
+      gap: .4rem;
+    }
+
+    .mode-btn {
+      padding: .4rem .9rem;
+      font-size: .8rem;
+      font-weight: 700;
+      border: 2px solid rgba(255,255,255,.2);
+      border-radius: 50px;
+      background: transparent;
+      color: rgba(255,255,255,.45);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .mode-btn:hover:not(.active) {
+      border-color: rgba(255,255,255,.45);
+      color: rgba(255,255,255,.7);
+    }
+
+    /* ─── Quiz timer bar ─── */
+    #quiz-timer-wrap {
+      width: var(--letter-size);
+      min-width: 180px;
+      max-width: 340px;
+      height: 10px;
+      background: rgba(255,255,255,.1);
+      border-radius: 5px;
+      overflow: hidden;
+      display: none;
+    }
+
+    #quiz-timer-bar {
+      height: 100%;
+      width: 100%;
+      background: #06d6a0;
+      border-radius: 5px;
+      transition: background .5s;
+    }
+
+    /* ─── Quiz info row ─── */
+    #quiz-info {
+      display: none;
+      gap: 1.5rem;
+      font-size: clamp(.9rem, 2.5vw, 1.1rem);
+      font-weight: 700;
+      color: rgba(255,255,255,.75);
+    }
+
+    /* ─── Shake (wrong answer) ─── */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-10px); }
+      40%       { transform: translateX(10px); }
+      60%       { transform: translateX(-8px); }
+      80%       { transform: translateX(8px); }
+    }
+
+    #letter-card.shake {
+      animation: shake .4s cubic-bezier(.36,.07,.19,.97);
+    }
+
+    /* ─── Clickable dot in quiz mode ─── */
+    .quiz-active .alpha-dot {
+      cursor: pointer;
+    }
+
+    .quiz-active .alpha-dot:hover {
+      background: rgba(255,255,255,.18);
+      transform: scale(1.12);
+    }
+
+    .quiz-active .alpha-dot:active {
+      transform: scale(.92);
+    }
   </style>
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
+
+  <div id="mode-toggle">
+    <button class="mode-btn active" id="btn-explore">🔤 Exploration</button>
+    <button class="mode-btn" id="btn-quiz">🎯 Devinette</button>
+  </div>
 
   <div id="stage">
     <div id="letter-card">
       <span id="letter-upper">?</span>
       <span id="letter-lower"></span>
     </div>
+    <div id="quiz-timer-wrap"><div id="quiz-timer-bar"></div></div>
     <p id="hint">Appuie sur une touche du clavier&nbsp;!</p>
+    <div id="quiz-info">
+      <span id="quiz-score">⭐ 0</span>
+      <span id="quiz-timer-label">⏱ 30s</span>
+    </div>
     <div id="progress-area">
       <span id="progress-label">0 / 26 lettres</span>
       <div id="alphabet-row"></div>
@@ -238,16 +337,23 @@
     const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     // ─── DOM refs ────────────────────────────────────────────────────────────
-    const letterUpper  = document.getElementById('letter-upper');
-    const letterLower  = document.getElementById('letter-lower');
-    const letterCard   = document.getElementById('letter-card');
-    const hint         = document.getElementById('hint');
-    const progressLabel= document.getElementById('progress-label');
-    const alphabetRow  = document.getElementById('alphabet-row');
-    const celebration  = document.getElementById('celebration');
-    const restartBtn   = document.getElementById('restart-btn');
-    const canvas       = document.getElementById('confetti-canvas');
-    const ctx          = canvas.getContext('2d');
+    const letterUpper    = document.getElementById('letter-upper');
+    const letterLower    = document.getElementById('letter-lower');
+    const letterCard     = document.getElementById('letter-card');
+    const hint           = document.getElementById('hint');
+    const progressLabel  = document.getElementById('progress-label');
+    const alphabetRow    = document.getElementById('alphabet-row');
+    const celebration    = document.getElementById('celebration');
+    const restartBtn     = document.getElementById('restart-btn');
+    const canvas         = document.getElementById('confetti-canvas');
+    const ctx            = canvas.getContext('2d');
+    const btnExplore     = document.getElementById('btn-explore');
+    const btnQuiz        = document.getElementById('btn-quiz');
+    const quizTimerWrap  = document.getElementById('quiz-timer-wrap');
+    const quizTimerBar   = document.getElementById('quiz-timer-bar');
+    const quizTimerLabel = document.getElementById('quiz-timer-label');
+    const quizScoreEl    = document.getElementById('quiz-score');
+    const quizInfoEl     = document.getElementById('quiz-info');
 
     // ─── Build alphabet dots ─────────────────────────────────────────────────
     ALPHABET.split('').forEach((ch, i) => {
@@ -256,6 +362,11 @@
       dot.id = 'dot-' + ch;
       dot.textContent = ch;
       dot.style.setProperty('--dot-color', COLORS[i]);
+      dot.addEventListener('click', () => {
+        if (!quizMode) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        handleQuizKey(ch);
+      });
       alphabetRow.appendChild(dot);
     });
 
@@ -403,6 +514,11 @@
       const key = e.key.toUpperCase();
       if (!/^[A-Z]$/.test(key)) return;
 
+      if (quizMode) {
+        handleQuizKey(key);
+        return;
+      }
+
       showLetter(key);
       typed.add(key);
       updateProgress();
@@ -416,13 +532,187 @@
       }
     });
 
+    // ─── Quiz mode ───────────────────────────────────────────────────────────
+    const QUIZ_DURATION = 30;
+
+    let quizMode          = false;
+    let quizTarget        = '';
+    let quizScore         = 0;
+    let quizRemaining     = [];
+    let quizTimerInterval = null;
+    let quizTimeLeft      = QUIZ_DURATION;
+    let quizLocked        = false;
+
+    function setMode(mode) {
+      if (mode === 'quiz') {
+        quizMode = true;
+        btnExplore.classList.remove('active');
+        btnQuiz.classList.add('active');
+        startQuiz();
+      } else {
+        quizMode = false;
+        btnExplore.classList.add('active');
+        btnQuiz.classList.remove('active');
+        stopQuiz();
+        restart();
+      }
+    }
+
+    btnExplore.addEventListener('click', () => setMode('explore'));
+    btnQuiz.addEventListener('click', () => setMode('quiz'));
+
+    function startQuiz() {
+      quizScore = 0;
+      quizRemaining = ALPHABET.split('').sort(() => Math.random() - .5);
+      quizTimerWrap.style.display = 'block';
+      quizInfoEl.style.display = 'flex';
+      alphabetRow.classList.add('quiz-active');
+      // Reset explore-mode progress
+      typed.clear();
+      ALPHABET.split('').forEach(ch => {
+        const dot = document.getElementById('dot-' + ch);
+        dot.classList.remove('done');
+        dot.style.background = '';
+      });
+      startNextQuizLetter();
+    }
+
+    function stopQuiz() {
+      clearInterval(quizTimerInterval);
+      quizTimerInterval = null;
+      quizTimerWrap.style.display = 'none';
+      quizInfoEl.style.display = 'none';
+      alphabetRow.classList.remove('quiz-active');
+    }
+
+    function startNextQuizLetter() {
+      if (quizRemaining.length === 0) {
+        stopQuiz();
+        setTimeout(() => {
+          playCelebration();
+          spawnConfetti(CONFETTI_COUNT_CELEBRATION);
+          document.querySelector('#celebration p').textContent =
+            `Tu as trouvé toutes les lettres\u00a0! Score\u00a0: ${quizScore} / 26`;
+          celebration.classList.add('show');
+        }, 400);
+        return;
+      }
+
+      quizLocked = false;
+      quizTarget = quizRemaining.pop();
+      quizTimeLeft = QUIZ_DURATION;
+
+      showQuizLetter(quizTarget);
+      updateQuizUI();
+
+      clearInterval(quizTimerInterval);
+      quizTimerInterval = setInterval(() => {
+        quizTimeLeft--;
+        updateQuizUI();
+        if (quizTimeLeft <= 0) {
+          clearInterval(quizTimerInterval);
+          quizTimerInterval = null;
+          onQuizTimeout();
+        }
+      }, 1000);
+    }
+
+    function showQuizLetter(ch) {
+      const index = ALPHABET.indexOf(ch);
+      const color = COLORS[index];
+
+      letterCard.style.setProperty('--glow', color);
+      letterUpper.textContent = ch;
+      letterLower.textContent = ch.toLowerCase();
+
+      letterCard.classList.remove('pop');
+      void letterCard.offsetWidth;
+      letterCard.classList.add('pop');
+
+      hint.textContent = 'Appuie sur la bonne lettre\u00a0!';
+      hint.classList.remove('hidden');
+
+      playLetterSound(index);
+      speakLetter(ch);
+    }
+
+    function updateQuizUI() {
+      const pct = (quizTimeLeft / QUIZ_DURATION) * 100;
+      quizTimerBar.style.width = pct + '%';
+      if (pct > 60)      quizTimerBar.style.background = '#06d6a0';
+      else if (pct > 30) quizTimerBar.style.background = '#ffd166';
+      else               quizTimerBar.style.background = '#e94560';
+      quizTimerLabel.textContent = `⏱ ${quizTimeLeft}s`;
+      quizScoreEl.textContent = `⭐ ${quizScore}`;
+    }
+
+    function onQuizTimeout() {
+      if (quizLocked) return;
+      quizLocked = true;
+
+      letterCard.classList.remove('shake');
+      void letterCard.offsetWidth;
+      letterCard.classList.add('shake');
+      playTone(180, 'sawtooth', 0.4);
+
+      hint.textContent = `C'était\u00a0: ${quizTarget} \u2014 Continue\u00a0!`;
+
+      setTimeout(() => {
+        letterCard.classList.remove('shake');
+        startNextQuizLetter();
+      }, 1500);
+    }
+
+    function handleQuizKey(key) {
+      if (quizLocked) return;
+
+      if (key === quizTarget) {
+        quizLocked = true;
+        quizScore++;
+        clearInterval(quizTimerInterval);
+        quizTimerInterval = null;
+
+        // Celebrate correct answer
+        letterCard.classList.remove('pop');
+        void letterCard.offsetWidth;
+        letterCard.classList.add('pop');
+        playLetterSound(ALPHABET.indexOf(key));
+        spawnConfetti(CONFETTI_COUNT_SMALL);
+
+        // Mark dot as found
+        const dot = document.getElementById('dot-' + key);
+        dot.classList.add('done');
+        dot.style.background = COLORS[ALPHABET.indexOf(key)];
+
+        updateQuizUI();
+        hint.textContent = '🎉 Bravo\u00a0!';
+
+        setTimeout(() => {
+          startNextQuizLetter();
+        }, 1200);
+      } else {
+        // Wrong answer
+        letterCard.classList.remove('shake');
+        void letterCard.offsetWidth;
+        letterCard.classList.add('shake');
+        playTone(180, 'sawtooth', 0.2);
+        hint.textContent = 'Essaie encore\u00a0!';
+        setTimeout(() => {
+          if (!quizLocked) hint.textContent = 'Appuie sur la bonne lettre\u00a0!';
+        }, 600);
+      }
+    }
+
     // ─── Restart ─────────────────────────────────────────────────────────────
     function restart() {
       typed.clear();
       letterUpper.textContent = '?';
       letterLower.textContent = '';
       letterCard.style.setProperty('--glow', 'transparent');
+      hint.textContent = 'Appuie sur une touche du clavier\u00a0!';
       hint.classList.remove('hidden');
+      document.querySelector('#celebration p').textContent =
+        'Tu as tapé toutes les lettres de l\u2019alphabet\u00a0!';
       celebration.classList.remove('show');
       ALPHABET.split('').forEach(ch => {
         const dot = document.getElementById('dot-' + ch);
@@ -434,7 +724,16 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    restartBtn.addEventListener('click', restart);
+    restartBtn.addEventListener('click', () => {
+      if (quizMode) {
+        celebration.classList.remove('show');
+        confettiPieces = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        startQuiz();
+      } else {
+        restart();
+      }
+    });
 
     // ─── Init ────────────────────────────────────────────────────────────────
     updateProgress();
