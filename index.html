@@ -381,6 +381,10 @@
   <script>
     // ─── Romaji ↔ Japanese syllabary lookup tables ───────────────────────────
     // Used by feedRomaji() and getLowerDisplay() for Hiragana and Katakana.
+    // Each map has 50 entries because alternative spellings (si/shi, ti/chi,
+    // tu/tsu, hu/fu) are included as extra keys that map to the same character.
+    // The reverse maps (HIRAGANA_ROMAJI / KATAKANA_ROMAJI) have 46 entries each
+    // — one canonical romanization per syllable.
     const ROMAJI_HIRAGANA_MAP = {
       'a':'\u3042','i':'\u3044','u':'\u3046','e':'\u3048','o':'\u304a',
       'ka':'\u304b','ki':'\u304d','ku':'\u304f','ke':'\u3051','ko':'\u3053',
