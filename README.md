@@ -17,7 +17,7 @@ A fun, interactive single-page web app to help children (and adults!) learn the 
   - 🔢 Digits — numbers 0–9
   - 📚 Both — letters and digits combined
 
-- **Five languages:**
+- **Eight languages:**
   | Flag | Language | Alphabet |
   |------|----------|---------|
   | 🇫🇷 | Français | A–Z |
@@ -25,6 +25,9 @@ A fun, interactive single-page web app to help children (and adults!) learn the 
   | 🇪🇸 | Español | A–Z, Ñ |
   | 🇩🇪 | Deutsch | A–Z, Ä, Ö, Ü, ß |
   | 🇮🇹 | Italiano | A–Z |
+  | 🇯🇵 | 日本語 | Hiragana (46 characters) |
+  | 🇷🇺 | Русский | Cyrillic А–Я (33 letters) |
+  | 🇺🇦 | Українська | Cyrillic А–Я (33 letters) |
 
 - **Progress tracking** — each typed or found character is highlighted in the alphabet row.
 - **Confetti celebration** 🎉 when all characters have been found.
