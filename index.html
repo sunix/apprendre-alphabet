@@ -201,6 +201,18 @@
       to   { transform: translateY(-18px); }
     }
 
+    /* ─── Content type toggle ─── */
+    #content-toggle {
+      position: fixed;
+      top: .8rem;
+      left: .8rem;
+      z-index: 5;
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+      max-width: 50vw;
+    }
+
     /* ─── Mode toggle ─── */
     #mode-toggle {
       position: fixed;
@@ -294,8 +306,14 @@
 <body>
   <canvas id="confetti-canvas"></canvas>
 
+  <div id="content-toggle">
+    <button class="mode-btn active" id="btn-letters" aria-label="Sélectionner les lettres">🔤 Lettres</button>
+    <button class="mode-btn" id="btn-digits" aria-label="Sélectionner les chiffres">🔢 Chiffres</button>
+    <button class="mode-btn" id="btn-both" aria-label="Sélectionner lettres et chiffres">📚 Les deux</button>
+  </div>
+
   <div id="mode-toggle">
-    <button class="mode-btn active" id="btn-explore">🔤 Exploration</button>
+    <button class="mode-btn active" id="btn-explore">🔍 Exploration</button>
     <button class="mode-btn" id="btn-quiz">🎯 Devinette</button>
   </div>
 
@@ -323,18 +341,46 @@
   </div>
 
   <script>
-    // ─── Palette: one colour per letter ─────────────────────────────────────
+    // ─── Palette: one colour per letter/digit ───────────────────────────────
     const COLORS = [
+      // 26 letters (A–Z)
       '#e94560','#ff6b6b','#ffa552','#ffd166','#06d6a0',
       '#1b9aaa','#4361ee','#7209b7','#f72585','#4cc9f0',
       '#90e0ef','#80b918','#e9c46a','#f4a261','#e76f51',
       '#264653','#2a9d8f','#e9c46a','#f4a261','#e76f51',
       '#e94560','#4361ee','#7209b7','#06d6a0','#ffd166','#ff6b6b',
+      // 10 digits (0–9)
+      '#ff9f1c','#2ec4b6','#f7b731','#fd79a8','#a29bfe',
+      '#55efc4','#fdcb6e','#e17055','#74b9ff','#b8e994',
     ];
 
     // ─── State ───────────────────────────────────────────────────────────────
     const typed = new Set();
     const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const DIGITS   = '0123456789';
+
+    let contentType = 'letters'; // 'letters' | 'digits' | 'both'
+
+    function getCharset() {
+      if (contentType === 'letters') return ALPHABET.split('');
+      if (contentType === 'digits')  return DIGITS.split('');
+      return [...ALPHABET.split(''), ...DIGITS.split('')];
+    }
+
+    // Returns the appropriate French noun for the current content type.
+    // pass true for plural, false for singular.
+    function getContentLabel(plural) {
+      if (contentType === 'digits')  return plural ? 'chiffres' : 'chiffre';
+      if (contentType === 'letters') return plural ? 'lettres'  : 'lettre';
+      return plural ? 'caractères' : 'caractère';
+    }
+
+    // Returns the quiz hint asking the player to press the right key.
+    function getQuizHint() {
+      if (contentType === 'digits')  return 'Appuie sur le bon chiffre\u00a0!';
+      if (contentType === 'letters') return 'Appuie sur la bonne lettre\u00a0!';
+      return 'Appuie sur la bonne touche\u00a0!';
+    }
 
     // ─── DOM refs ────────────────────────────────────────────────────────────
     const letterUpper    = document.getElementById('letter-upper');
@@ -349,26 +395,32 @@
     const ctx            = canvas.getContext('2d');
     const btnExplore     = document.getElementById('btn-explore');
     const btnQuiz        = document.getElementById('btn-quiz');
+    const btnLetters     = document.getElementById('btn-letters');
+    const btnDigits      = document.getElementById('btn-digits');
+    const btnBoth        = document.getElementById('btn-both');
     const quizTimerWrap  = document.getElementById('quiz-timer-wrap');
     const quizTimerBar   = document.getElementById('quiz-timer-bar');
     const quizTimerLabel = document.getElementById('quiz-timer-label');
     const quizScoreEl    = document.getElementById('quiz-score');
     const quizInfoEl     = document.getElementById('quiz-info');
 
-    // ─── Build alphabet dots ─────────────────────────────────────────────────
-    ALPHABET.split('').forEach((ch, i) => {
-      const dot = document.createElement('div');
-      dot.className = 'alpha-dot';
-      dot.id = 'dot-' + ch;
-      dot.textContent = ch;
-      dot.style.setProperty('--dot-color', COLORS[i]);
-      dot.addEventListener('click', () => {
-        if (!quizMode) return;
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        handleQuizKey(ch);
+    // ─── Build character dots ────────────────────────────────────────────────
+    function buildDots() {
+      alphabetRow.innerHTML = '';
+      getCharset().forEach((ch, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'alpha-dot';
+        dot.id = 'dot-' + ch;
+        dot.textContent = ch;
+        dot.style.setProperty('--dot-color', COLORS[i]);
+        dot.addEventListener('click', () => {
+          if (!quizMode) return;
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          handleQuizKey(ch);
+        });
+        alphabetRow.appendChild(dot);
       });
-      alphabetRow.appendChild(dot);
-    });
+    }
 
     // ─── Audio: tiny beep via Web Audio API ─────────────────────────────────
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -473,14 +525,15 @@
       }
     }
 
-    // ─── Show letter ─────────────────────────────────────────────────────────
+    // ─── Show letter/digit ───────────────────────────────────────────────────
     function showLetter(ch) {
-      const index = ALPHABET.indexOf(ch);
+      const charset = getCharset();
+      const index = charset.indexOf(ch);
       const color = COLORS[index];
 
       letterCard.style.setProperty('--glow', color);
       letterUpper.textContent = ch;
-      letterLower.textContent = ch.toLowerCase();
+      letterLower.textContent = /^[0-9]$/.test(ch) ? '' : ch.toLowerCase();
 
       // Pop animation (re-trigger)
       letterCard.classList.remove('pop');
@@ -495,10 +548,12 @@
 
     // ─── Update progress ─────────────────────────────────────────────────────
     function updateProgress() {
-      progressLabel.textContent = `${typed.size} / 26 lettres`;
+      const charset = getCharset();
+      progressLabel.textContent = `${typed.size} / ${charset.length} ${getContentLabel(true)}`;
 
-      ALPHABET.split('').forEach((ch, i) => {
+      charset.forEach((ch, i) => {
         const dot = document.getElementById('dot-' + ch);
+        if (!dot) return;
         if (typed.has(ch)) {
           dot.classList.add('done');
           dot.style.background = COLORS[i];
@@ -512,7 +567,8 @@
       if (audioCtx.state === 'suspended') audioCtx.resume();
 
       const key = e.key.toUpperCase();
-      if (!/^[A-Z]$/.test(key)) return;
+      const charset = getCharset();
+      if (!charset.includes(key)) return;
 
       if (quizMode) {
         handleQuizKey(key);
@@ -523,7 +579,7 @@
       typed.add(key);
       updateProgress();
 
-      if (typed.size === 26) {
+      if (typed.size === charset.length) {
         setTimeout(() => {
           playCelebration();
           spawnConfetti(CONFETTI_COUNT_CELEBRATION);
@@ -565,8 +621,9 @@
 
     function startQuiz() {
       quizScore = 0;
-      // Fisher-Yates shuffle for unbiased letter order
-      quizRemaining = ALPHABET.split('');
+      // Fisher-Yates shuffle for unbiased character order
+      const charset = getCharset();
+      quizRemaining = [...charset];
       for (let i = quizRemaining.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [quizRemaining[i], quizRemaining[j]] = [quizRemaining[j], quizRemaining[i]];
@@ -576,8 +633,9 @@
       alphabetRow.classList.add('quiz-active');
       // Reset explore-mode progress
       typed.clear();
-      ALPHABET.split('').forEach(ch => {
+      charset.forEach(ch => {
         const dot = document.getElementById('dot-' + ch);
+        if (!dot) return;
         dot.classList.remove('done');
         dot.style.background = '';
       });
@@ -598,8 +656,12 @@
         setTimeout(() => {
           playCelebration();
           spawnConfetti(CONFETTI_COUNT_CELEBRATION);
+          const charset = getCharset();
+          const found = contentType === 'digits'  ? 'tous les chiffres'
+                      : contentType === 'letters' ? 'toutes les lettres'
+                      : 'toutes les lettres et tous les chiffres';
           document.querySelector('#celebration p').textContent =
-            `Tu as trouvé toutes les lettres\u00a0! Score\u00a0: ${quizScore} / 26`;
+            `Tu as trouvé ${found}\u00a0! Score\u00a0: ${quizScore} / ${charset.length}`;
           celebration.classList.add('show');
         }, 400);
         return;
@@ -625,18 +687,19 @@
     }
 
     function showQuizLetter(ch) {
-      const index = ALPHABET.indexOf(ch);
+      const charset = getCharset();
+      const index = charset.indexOf(ch);
       const color = COLORS[index];
 
       letterCard.style.setProperty('--glow', color);
       letterUpper.textContent = ch;
-      letterLower.textContent = ch.toLowerCase();
+      letterLower.textContent = /^[0-9]$/.test(ch) ? '' : ch.toLowerCase();
 
       letterCard.classList.remove('pop');
       void letterCard.offsetWidth; // reflow to restart animation
       letterCard.classList.add('pop');
 
-      hint.textContent = 'Appuie sur la bonne lettre\u00a0!';
+      hint.textContent = getQuizHint();
       hint.classList.remove('hidden');
 
       playLetterSound(index);
@@ -683,13 +746,14 @@
         letterCard.classList.remove('pop');
         void letterCard.offsetWidth; // reflow to restart animation
         letterCard.classList.add('pop');
-        playLetterSound(ALPHABET.indexOf(key));
+        const charset = getCharset();
+        playLetterSound(charset.indexOf(key));
         spawnConfetti(CONFETTI_COUNT_SMALL);
 
         // Mark dot as found
         const dot = document.getElementById('dot-' + key);
         dot.classList.add('done');
-        dot.style.background = COLORS[ALPHABET.indexOf(key)];
+        dot.style.background = COLORS[charset.indexOf(key)];
 
         updateQuizUI();
         hint.textContent = '🎉 Bravo\u00a0!';
@@ -705,7 +769,9 @@
         playTone(BUZZ_FREQUENCY, BUZZ_WAVEFORM, 0.2);
         hint.textContent = 'Essaie encore\u00a0!';
         setTimeout(() => {
-          if (!quizLocked) hint.textContent = 'Appuie sur la bonne lettre\u00a0!';
+          if (!quizLocked) {
+            hint.textContent = getQuizHint();
+          }
         }, 600);
       }
     }
@@ -719,10 +785,13 @@
       hint.textContent = 'Appuie sur une touche du clavier\u00a0!';
       hint.classList.remove('hidden');
       document.querySelector('#celebration p').textContent =
-        'Tu as tapé toutes les lettres de l\u2019alphabet\u00a0!';
+          contentType === 'digits'  ? 'Tu as tapé tous les chiffres\u00a0!'
+        : contentType === 'letters' ? 'Tu as tapé toutes les lettres de l\u2019alphabet\u00a0!'
+        : 'Tu as tapé toutes les lettres et tous les chiffres\u00a0!';
       celebration.classList.remove('show');
-      ALPHABET.split('').forEach(ch => {
+      getCharset().forEach(ch => {
         const dot = document.getElementById('dot-' + ch);
+        if (!dot) return;
         dot.classList.remove('done');
         dot.style.background = '';
       });
@@ -742,7 +811,27 @@
       }
     });
 
+    // ─── Content type toggle ────────────────────────────────────────────────
+    function setContentType(type) {
+      contentType = type;
+      btnLetters.classList.toggle('active', type === 'letters');
+      btnDigits.classList.toggle('active', type === 'digits');
+      btnBoth.classList.toggle('active', type === 'both');
+      buildDots();
+      if (quizMode) {
+        stopQuiz();
+        startQuiz();
+      } else {
+        restart();
+      }
+    }
+
+    btnLetters.addEventListener('click', () => setContentType('letters'));
+    btnDigits.addEventListener('click',  () => setContentType('digits'));
+    btnBoth.addEventListener('click',    () => setContentType('both'));
+
     // ─── Init ────────────────────────────────────────────────────────────────
+    buildDots();
     updateProgress();
   </script>
 </body>
