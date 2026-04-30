@@ -284,6 +284,15 @@
       playTone(freq, 'triangle', 0.22);
     }
 
+    function speakLetter(ch) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(ch);
+      utter.lang = 'fr-FR';
+      utter.rate = 0.8;
+      window.speechSynthesis.speak(utter);
+    }
+
     function playCelebration() {
       [0, 4, 7, 12].forEach((semi, i) => {
         setTimeout(() => {
@@ -369,6 +378,7 @@
 
       hint.classList.add('hidden');
       playLetterSound(index);
+      speakLetter(ch);
       spawnConfetti(CONFETTI_COUNT_SMALL);
     }
 
