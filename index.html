@@ -301,10 +301,35 @@
     .quiz-active .alpha-dot:active {
       transform: scale(.92);
     }
+
+    /* ─── Language selector ─── */
+    #lang-toggle {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      display: flex;
+      gap: .3rem;
+    }
+
+    .lang-btn {
+      padding: .3rem .55rem;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
   </style>
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
+
+  <div id="lang-toggle">
+    <button class="mode-btn lang-btn active" data-lang="fr" aria-label="Français">🇫🇷</button>
+    <button class="mode-btn lang-btn" data-lang="en" aria-label="English">🇬🇧</button>
+    <button class="mode-btn lang-btn" data-lang="es" aria-label="Español">🇪🇸</button>
+    <button class="mode-btn lang-btn" data-lang="de" aria-label="Deutsch">🇩🇪</button>
+    <button class="mode-btn lang-btn" data-lang="it" aria-label="Italiano">🇮🇹</button>
+  </div>
 
   <div id="content-toggle">
     <button class="mode-btn active" id="btn-letters" aria-label="Sélectionner les lettres">🔤 Lettres</button>
@@ -341,6 +366,218 @@
   </div>
 
   <script>
+    // ─── Language definitions ─────────────────────────────────────────────────
+    const LANGUAGES = {
+      fr: {
+        speechCode: 'fr-FR',
+        alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        hintExplore: 'Appuie sur une touche du clavier\u00a0!',
+        hintQuiz: {
+          digits:  'Appuie sur le bon chiffre\u00a0!',
+          letters: 'Appuie sur la bonne lettre\u00a0!',
+          both:    'Appuie sur la bonne touche\u00a0!',
+        },
+        contentLabel: {
+          digits:  ['chiffre',    'chiffres'],
+          letters: ['lettre',     'lettres'],
+          both:    ['caract\u00e8re', 'caract\u00e8res'],
+        },
+        celebTitle: '🎉 Bravo\u00a0!',
+        celebText: {
+          digits:  'Tu as tap\u00e9 tous les chiffres\u00a0!',
+          letters: 'Tu as tap\u00e9 toutes les lettres de l\u2019alphabet\u00a0!',
+          both:    'Tu as tap\u00e9 toutes les lettres et tous les chiffres\u00a0!',
+        },
+        quizFoundAll: {
+          digits:  'tous les chiffres',
+          letters: 'toutes les lettres',
+          both:    'toutes les lettres et tous les chiffres',
+        },
+        wasIt:    ch => `C\u2019\u00e9tait\u00a0: ${ch} \u2014 Continue\u00a0!`,
+        tryAgain: 'Essaie encore\u00a0!',
+        correct:  '🎉 Bravo\u00a0!',
+        quizScoreMsg: (found, score, total) =>
+          `Tu as trouv\u00e9 ${found}\u00a0! Score\u00a0: ${score}\u00a0/ ${total}`,
+        restartBtn:  'Recommencer',
+        lettersBtn:  '🔤 Lettres',
+        digitsBtn:   '🔢 Chiffres',
+        bothBtn:     '📚 Les deux',
+        exploreBtn:  '🔍 Exploration',
+        quizBtn:     '🎯 Devinette',
+        pageTitle:   "Apprendre l'Alphabet",
+        htmlLang:    'fr',
+      },
+      en: {
+        speechCode: 'en-GB',
+        alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        hintExplore: 'Press a key on your keyboard!',
+        hintQuiz: {
+          digits:  'Press the right digit!',
+          letters: 'Press the right letter!',
+          both:    'Press the right key!',
+        },
+        contentLabel: {
+          digits:  ['digit',     'digits'],
+          letters: ['letter',    'letters'],
+          both:    ['character', 'characters'],
+        },
+        celebTitle: '🎉 Well done!',
+        celebText: {
+          digits:  'You typed all the digits!',
+          letters: 'You typed all the letters of the alphabet!',
+          both:    'You typed all letters and digits!',
+        },
+        quizFoundAll: {
+          digits:  'all the digits',
+          letters: 'all the letters',
+          both:    'all letters and digits',
+        },
+        wasIt:    ch => `It was: ${ch} \u2014 Keep going!`,
+        tryAgain: 'Try again!',
+        correct:  '🎉 Correct!',
+        quizScoreMsg: (found, score, total) =>
+          `You found ${found}! Score: ${score} / ${total}`,
+        restartBtn:  'Play again',
+        lettersBtn:  '🔤 Letters',
+        digitsBtn:   '🔢 Digits',
+        bothBtn:     '📚 Both',
+        exploreBtn:  '🔍 Explore',
+        quizBtn:     '🎯 Quiz',
+        pageTitle:   'Learn the Alphabet',
+        htmlLang:    'en',
+      },
+      es: {
+        speechCode: 'es-ES',
+        alphabet: 'ABCDEFGHIJKLMN\u00d1OPQRSTUVWXYZ',
+        hintExplore: '\u00a1Pulsa una tecla del teclado!',
+        hintQuiz: {
+          digits:  '\u00a1Pulsa el d\u00edgito correcto!',
+          letters: '\u00a1Pulsa la letra correcta!',
+          both:    '\u00a1Pulsa la tecla correcta!',
+        },
+        contentLabel: {
+          digits:  ['d\u00edgito',   'd\u00edgitos'],
+          letters: ['letra',      'letras'],
+          both:    ['car\u00e1cter', 'caracteres'],
+        },
+        celebTitle: '🎉 \u00a1Bravo!',
+        celebText: {
+          digits:  '\u00a1Has escrito todos los d\u00edgitos!',
+          letters: '\u00a1Has escrito todas las letras del alfabeto!',
+          both:    '\u00a1Has escrito todas las letras y los d\u00edgitos!',
+        },
+        quizFoundAll: {
+          digits:  'todos los d\u00edgitos',
+          letters: 'todas las letras',
+          both:    'todas las letras y los d\u00edgitos',
+        },
+        wasIt:    ch => `Era: ${ch} \u2014 \u00a1Contin\u00faa!`,
+        tryAgain: '\u00a1Int\u00e9ntalo de nuevo!',
+        correct:  '🎉 \u00a1Correcto!',
+        quizScoreMsg: (found, score, total) =>
+          `\u00a1Has encontrado ${found}! Puntuaci\u00f3n: ${score} / ${total}`,
+        restartBtn:  'Jugar de nuevo',
+        lettersBtn:  '🔤 Letras',
+        digitsBtn:   '🔢 N\u00fameros',
+        bothBtn:     '📚 Ambos',
+        exploreBtn:  '🔍 Explorar',
+        quizBtn:     '🎯 Adivinar',
+        pageTitle:   'Aprender el Alfabeto',
+        htmlLang:    'es',
+      },
+      de: {
+        speechCode: 'de-DE',
+        alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\u00c4\u00d6\u00dc\u00df',
+        hintExplore: 'Dr\u00fccke eine Taste auf der Tastatur!',
+        hintQuiz: {
+          digits:  'Dr\u00fccke die richtige Ziffer!',
+          letters: 'Dr\u00fccke den richtigen Buchstaben!',
+          both:    'Dr\u00fccke die richtige Taste!',
+        },
+        contentLabel: {
+          digits:  ['Ziffer',    'Ziffern'],
+          letters: ['Buchstabe', 'Buchstaben'],
+          both:    ['Zeichen',   'Zeichen'],
+        },
+        celebTitle: '🎉 Bravo!',
+        celebText: {
+          digits:  'Du hast alle Ziffern getippt!',
+          letters: 'Du hast alle Buchstaben des Alphabets getippt!',
+          both:    'Du hast alle Buchstaben und Ziffern getippt!',
+        },
+        quizFoundAll: {
+          digits:  'alle Ziffern',
+          letters: 'alle Buchstaben',
+          both:    'alle Buchstaben und Ziffern',
+        },
+        wasIt:    ch => `Es war: ${ch} \u2014 Weiter so!`,
+        tryAgain: 'Versuche es nochmal!',
+        correct:  '🎉 Richtig!',
+        quizScoreMsg: (found, score, total) =>
+          `Du hast ${found} gefunden! Punkte: ${score} / ${total}`,
+        restartBtn:  'Neu starten',
+        lettersBtn:  '🔤 Buchstaben',
+        digitsBtn:   '🔢 Ziffern',
+        bothBtn:     '📚 Beides',
+        exploreBtn:  '🔍 Erkunden',
+        quizBtn:     '🎯 Quiz',
+        pageTitle:   'Das Alphabet lernen',
+        htmlLang:    'de',
+      },
+      it: {
+        speechCode: 'it-IT',
+        alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        hintExplore: 'Premi un tasto sulla tastiera!',
+        hintQuiz: {
+          digits:  'Premi la cifra giusta!',
+          letters: 'Premi la lettera giusta!',
+          both:    'Premi il tasto giusto!',
+        },
+        contentLabel: {
+          digits:  ['cifra',      'cifre'],
+          letters: ['lettera',    'lettere'],
+          both:    ['carattere',  'caratteri'],
+        },
+        celebTitle: '🎉 Bravo!',
+        celebText: {
+          digits:  'Hai digitato tutte le cifre!',
+          letters: "Hai digitato tutte le lettere dell'alfabeto!",
+          both:    'Hai digitato tutte le lettere e le cifre!',
+        },
+        quizFoundAll: {
+          digits:  'tutte le cifre',
+          letters: 'tutte le lettere',
+          both:    'tutte le lettere e le cifre',
+        },
+        wasIt:    ch => `Era: ${ch} \u2014 Continua!`,
+        tryAgain: 'Riprova!',
+        correct:  '🎉 Bravo!',
+        quizScoreMsg: (found, score, total) =>
+          `Hai trovato ${found}! Punteggio: ${score} / ${total}`,
+        restartBtn:  'Ricominciare',
+        lettersBtn:  '🔤 Lettere',
+        digitsBtn:   '🔢 Cifre',
+        bothBtn:     '📚 Entrambi',
+        exploreBtn:  '🔍 Esplora',
+        quizBtn:     '🎯 Indovina',
+        pageTitle:   "Imparare l'Alfabeto",
+        htmlLang:    'it',
+      },
+    };
+
+    let currentLangKey = localStorage.getItem('lang');
+    if (!currentLangKey || !LANGUAGES[currentLangKey]) currentLangKey = 'fr';
+    function getLang() { return LANGUAGES[currentLangKey]; }
+
+    // Normalise a raw key name to match the charset.
+    // Special case: JS toUpperCase('ß') returns 'SS' (not 'ẞ'), which would
+    // break charset matching, so both lowercase ß (U+00DF) and the rare
+    // capital ẞ (U+1E9E) are mapped to the stored charset character 'ß'.
+    function normalizeKey(rawKey) {
+      if (rawKey === '\u00df' || rawKey === '\u1e9e') return '\u00df';
+      return rawKey.toUpperCase();
+    }
+
     // ─── Palette: one colour per letter/digit ───────────────────────────────
     const COLORS = [
       // 26 letters (A–Z)
@@ -356,30 +593,27 @@
 
     // ─── State ───────────────────────────────────────────────────────────────
     const typed = new Set();
-    const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const DIGITS   = '0123456789';
 
     let contentType = 'letters'; // 'letters' | 'digits' | 'both'
 
     function getCharset() {
-      if (contentType === 'letters') return ALPHABET.split('');
+      const alpha = getLang().alphabet.split('');
+      if (contentType === 'letters') return alpha;
       if (contentType === 'digits')  return DIGITS.split('');
-      return [...ALPHABET.split(''), ...DIGITS.split('')];
+      return [...alpha, ...DIGITS.split('')];
     }
 
-    // Returns the appropriate French noun for the current content type.
+    // Returns the appropriate noun for the current content type.
     // pass true for plural, false for singular.
     function getContentLabel(plural) {
-      if (contentType === 'digits')  return plural ? 'chiffres' : 'chiffre';
-      if (contentType === 'letters') return plural ? 'lettres'  : 'lettre';
-      return plural ? 'caractères' : 'caractère';
+      const labels = getLang().contentLabel[contentType];
+      return plural ? labels[1] : labels[0];
     }
 
     // Returns the quiz hint asking the player to press the right key.
     function getQuizHint() {
-      if (contentType === 'digits')  return 'Appuie sur le bon chiffre\u00a0!';
-      if (contentType === 'letters') return 'Appuie sur la bonne lettre\u00a0!';
-      return 'Appuie sur la bonne touche\u00a0!';
+      return getLang().hintQuiz[contentType];
     }
 
     // ─── DOM refs ────────────────────────────────────────────────────────────
@@ -412,7 +646,7 @@
         dot.className = 'alpha-dot';
         dot.id = 'dot-' + ch;
         dot.textContent = ch;
-        dot.style.setProperty('--dot-color', COLORS[i]);
+        dot.style.setProperty('--dot-color', COLORS[i % COLORS.length]);
         dot.addEventListener('click', () => {
           if (!quizMode) return;
           if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -451,7 +685,7 @@
       if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(ch);
-      utter.lang = 'fr-FR';
+      utter.lang = getLang().speechCode;
       utter.rate = 0.8;
       window.speechSynthesis.speak(utter);
     }
@@ -529,7 +763,7 @@
     function showLetter(ch) {
       const charset = getCharset();
       const index = charset.indexOf(ch);
-      const color = COLORS[index];
+      const color = COLORS[index % COLORS.length];
 
       letterCard.style.setProperty('--glow', color);
       letterUpper.textContent = ch;
@@ -566,7 +800,7 @@
       // Resume audio context (required by browser autoplay policy)
       if (audioCtx.state === 'suspended') audioCtx.resume();
 
-      const key = e.key.toUpperCase();
+      const key = normalizeKey(e.key);
       const charset = getCharset();
       if (!charset.includes(key)) return;
 
@@ -657,11 +891,9 @@
           playCelebration();
           spawnConfetti(CONFETTI_COUNT_CELEBRATION);
           const charset = getCharset();
-          const found = contentType === 'digits'  ? 'tous les chiffres'
-                      : contentType === 'letters' ? 'toutes les lettres'
-                      : 'toutes les lettres et tous les chiffres';
+          const found = getLang().quizFoundAll[contentType];
           document.querySelector('#celebration p').textContent =
-            `Tu as trouvé ${found}\u00a0! Score\u00a0: ${quizScore} / ${charset.length}`;
+            getLang().quizScoreMsg(found, quizScore, charset.length);
           celebration.classList.add('show');
         }, 400);
         return;
@@ -689,7 +921,7 @@
     function showQuizLetter(ch) {
       const charset = getCharset();
       const index = charset.indexOf(ch);
-      const color = COLORS[index];
+      const color = COLORS[index % COLORS.length];
 
       letterCard.style.setProperty('--glow', color);
       letterUpper.textContent = ch;
@@ -725,7 +957,7 @@
       letterCard.classList.add('shake');
       playTone(BUZZ_FREQUENCY, BUZZ_WAVEFORM, 0.4);
 
-      hint.textContent = `C'était\u00a0: ${quizTarget} \u2014 Continue\u00a0!`;
+      hint.textContent = getLang().wasIt(quizTarget);
 
       setTimeout(() => {
         letterCard.classList.remove('shake');
@@ -753,10 +985,10 @@
         // Mark dot as found
         const dot = document.getElementById('dot-' + key);
         dot.classList.add('done');
-        dot.style.background = COLORS[charset.indexOf(key)];
+        dot.style.background = COLORS[charset.indexOf(key) % COLORS.length];
 
         updateQuizUI();
-        hint.textContent = '🎉 Bravo\u00a0!';
+        hint.textContent = getLang().correct;
 
         setTimeout(() => {
           startNextQuizLetter();
@@ -767,7 +999,7 @@
         void letterCard.offsetWidth; // reflow to restart animation
         letterCard.classList.add('shake');
         playTone(BUZZ_FREQUENCY, BUZZ_WAVEFORM, 0.2);
-        hint.textContent = 'Essaie encore\u00a0!';
+        hint.textContent = getLang().tryAgain;
         setTimeout(() => {
           if (!quizLocked) {
             hint.textContent = getQuizHint();
@@ -782,12 +1014,9 @@
       letterUpper.textContent = '?';
       letterLower.textContent = '';
       letterCard.style.setProperty('--glow', 'transparent');
-      hint.textContent = 'Appuie sur une touche du clavier\u00a0!';
+      hint.textContent = getLang().hintExplore;
       hint.classList.remove('hidden');
-      document.querySelector('#celebration p').textContent =
-          contentType === 'digits'  ? 'Tu as tapé tous les chiffres\u00a0!'
-        : contentType === 'letters' ? 'Tu as tapé toutes les lettres de l\u2019alphabet\u00a0!'
-        : 'Tu as tapé toutes les lettres et tous les chiffres\u00a0!';
+      document.querySelector('#celebration p').textContent = getLang().celebText[contentType];
       celebration.classList.remove('show');
       getCharset().forEach(ch => {
         const dot = document.getElementById('dot-' + ch);
@@ -830,8 +1059,53 @@
     btnDigits.addEventListener('click',  () => setContentType('digits'));
     btnBoth.addEventListener('click',    () => setContentType('both'));
 
+    // ─── Language toggle ────────────────────────────────────────────────────
+    function setLanguage(key) {
+      currentLangKey = key;
+      localStorage.setItem('lang', key);
+      const lang = getLang();
+
+      // Update document language and title
+      document.documentElement.lang = lang.htmlLang;
+      document.title = lang.pageTitle;
+
+      // Update content-toggle button labels
+      btnLetters.textContent = lang.lettersBtn;
+      btnLetters.setAttribute('aria-label', lang.lettersBtn);
+      btnDigits.textContent = lang.digitsBtn;
+      btnDigits.setAttribute('aria-label', lang.digitsBtn);
+      btnBoth.textContent = lang.bothBtn;
+      btnBoth.setAttribute('aria-label', lang.bothBtn);
+
+      // Update mode-toggle button labels
+      btnExplore.textContent = lang.exploreBtn;
+      btnQuiz.textContent = lang.quizBtn;
+
+      // Update celebration overlay
+      document.querySelector('#celebration h1').textContent = lang.celebTitle;
+      restartBtn.textContent = lang.restartBtn;
+
+      // Highlight active language button
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === key);
+      });
+
+      // Rebuild dots for new alphabet and restart current mode
+      buildDots();
+      if (quizMode) {
+        stopQuiz();
+        startQuiz();
+      } else {
+        restart();
+      }
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    });
+
     // ─── Init ────────────────────────────────────────────────────────────────
-    buildDots();
+    setLanguage(currentLangKey);
     updateProgress();
   </script>
 </body>
