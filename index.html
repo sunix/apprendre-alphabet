@@ -318,6 +318,14 @@
       font-size: 1.1rem;
       line-height: 1;
     }
+
+    /* ─── GitHub star button ─── */
+    #github-star {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
@@ -340,6 +348,7 @@
   <div id="mode-toggle">
     <button class="mode-btn active" id="btn-explore">🔍 Exploration</button>
     <button class="mode-btn" id="btn-quiz">🎯 Devinette</button>
+    <a id="github-star" class="mode-btn" href="https://github.com/sunix/apprendre-alphabet" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">⭐ <span id="star-count">…</span></a>
   </div>
 
   <div id="stage">
@@ -1120,6 +1129,16 @@
     // ─── Init ────────────────────────────────────────────────────────────────
     setLanguage(currentLangKey);
     updateProgress();
+
+    // ─── GitHub star count ───────────────────────────────────────────────────
+    fetch('https://api.github.com/repos/sunix/apprendre-alphabet')
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(data => {
+        if (typeof data.stargazers_count === 'number') {
+          document.getElementById('star-count').textContent = data.stargazers_count;
+        }
+      })
+      .catch(() => { /* silently ignore network errors */ });
   </script>
 </body>
 </html>
