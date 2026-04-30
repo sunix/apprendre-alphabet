@@ -338,7 +338,7 @@
     <button class="mode-btn lang-btn" data-lang="de" aria-label="Deutsch">🇩🇪</button>
     <button class="mode-btn lang-btn" data-lang="it" aria-label="Italiano">🇮🇹</button>
     <button class="mode-btn lang-btn" data-lang="ja" aria-label="ひらがな">🇯🇵あ</button>
-    <button class="mode-btn lang-btn" data-lang="kt" aria-label="カタカナ">🇯🇵カ</button>
+    <button class="mode-btn lang-btn" data-lang="kt" aria-label="Katakana (カタカナ)">🇯🇵カ</button>
     <button class="mode-btn lang-btn" data-lang="ru" aria-label="Русский">🇷🇺</button>
     <button class="mode-btn lang-btn" data-lang="uk" aria-label="Українська">🇺🇦</button>
   </div>
@@ -784,6 +784,7 @@
     //   nn          → ン
     //   n + vowel   → na-row syllable (na, ni, nu, ne, no)
     //   n + consonant → emit ン, start a new buffer with that consonant
+    const VOWELS = 'aeiou';
     let romajiBuffer = '';
 
     function feedRomaji(letter) {
@@ -795,7 +796,7 @@
           romajiBuffer = '';
           return '\u30f3'; // ン
         }
-        if (!'aeiou'.includes(ch)) {
+        if (!VOWELS.includes(ch)) {
           // n + consonant → emit ン, restart buffer with this consonant
           romajiBuffer = ch;
           return '\u30f3'; // ン
