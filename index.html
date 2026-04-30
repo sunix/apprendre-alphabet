@@ -379,8 +379,36 @@
   </div>
 
   <script>
-    // ─── Romaji ↔ Katakana lookup tables ─────────────────────────────────────
-    // Used by feedRomaji() and getLowerDisplay() for the Katakana language.
+    // ─── Romaji ↔ Japanese syllabary lookup tables ───────────────────────────
+    // Used by feedRomaji() and getLowerDisplay() for Hiragana and Katakana.
+    const ROMAJI_HIRAGANA_MAP = {
+      'a':'\u3042','i':'\u3044','u':'\u3046','e':'\u3048','o':'\u304a',
+      'ka':'\u304b','ki':'\u304d','ku':'\u304f','ke':'\u3051','ko':'\u3053',
+      'sa':'\u3055','si':'\u3057','shi':'\u3057','su':'\u3059','se':'\u305b','so':'\u305d',
+      'ta':'\u305f','ti':'\u3061','chi':'\u3061','tu':'\u3064','tsu':'\u3064','te':'\u3066','to':'\u3068',
+      'na':'\u306a','ni':'\u306b','nu':'\u306c','ne':'\u306d','no':'\u306e',
+      'ha':'\u306f','hi':'\u3072','hu':'\u3075','fu':'\u3075','he':'\u3078','ho':'\u307b',
+      'ma':'\u307e','mi':'\u307f','mu':'\u3080','me':'\u3081','mo':'\u3082',
+      'ya':'\u3084','yu':'\u3086','yo':'\u3088',
+      'ra':'\u3089','ri':'\u308a','ru':'\u308b','re':'\u308c','ro':'\u308d',
+      'wa':'\u308f','wo':'\u3092',
+      'nn':'\u3093',
+    };
+
+    // Hiragana → canonical romaji for the lower-case display span.
+    const HIRAGANA_ROMAJI = {
+      '\u3042':'a',  '\u3044':'i',  '\u3046':'u',  '\u3048':'e',  '\u304a':'o',
+      '\u304b':'ka', '\u304d':'ki', '\u304f':'ku', '\u3051':'ke', '\u3053':'ko',
+      '\u3055':'sa', '\u3057':'shi','\u3059':'su', '\u305b':'se', '\u305d':'so',
+      '\u305f':'ta', '\u3061':'chi','\u3064':'tsu','\u3066':'te', '\u3068':'to',
+      '\u306a':'na', '\u306b':'ni', '\u306c':'nu', '\u306d':'ne', '\u306e':'no',
+      '\u306f':'ha', '\u3072':'hi', '\u3075':'fu', '\u3078':'he', '\u307b':'ho',
+      '\u307e':'ma', '\u307f':'mi', '\u3080':'mu', '\u3081':'me', '\u3082':'mo',
+      '\u3084':'ya', '\u3086':'yu', '\u3088':'yo',
+      '\u3089':'ra', '\u308a':'ri', '\u308b':'ru', '\u308c':'re', '\u308d':'ro',
+      '\u308f':'wa', '\u3092':'wo', '\u3093':'nn',
+    };
+
     const ROMAJI_KATAKANA_MAP = {
       'a':'\u30a2','i':'\u30a4','u':'\u30a6','e':'\u30a8','o':'\u30aa',
       'ka':'\u30ab','ki':'\u30ad','ku':'\u30af','ke':'\u30b1','ko':'\u30b3',
@@ -609,11 +637,11 @@
       ja: {
         speechCode: 'ja-JP',
         alphabet: '\u3042\u3044\u3046\u3048\u304a\u304b\u304d\u304f\u3051\u3053\u3055\u3057\u3059\u305b\u305d\u305f\u3061\u3064\u3066\u3068\u306a\u306b\u306c\u306d\u306e\u306f\u3072\u3075\u3078\u307b\u307e\u307f\u3080\u3081\u3082\u3084\u3086\u3088\u3089\u308a\u308b\u308c\u308d\u308f\u3092\u3093',
-        hintExplore: '\u30ad\u30fc\u30dc\u30fc\u30c9\u306e\u30ad\u30fc\u3092\u62bc\u3057\u3066\u306d\uff01',
+        hintExplore: '\u30ed\u30fc\u30de\u5b57\u3067\u5165\u529b\u3057\u3066\u306d\uff01(\u4f8b: mi \u2192 \u307f, nn \u2192 \u3093)',
         hintQuiz: {
           digits:  '\u6b63\u3057\u3044\u6570\u5b57\u3092\u62bc\u3057\u3066\u306d\uff01',
-          letters: '\u6b63\u3057\u3044\u3072\u3089\u304c\u306a\u3092\u62bc\u3057\u3066\u306d\uff01',
-          both:    '\u6b63\u3057\u3044\u6587\u5b57\u3092\u62bc\u3057\u3066\u306d\uff01',
+          letters: '\u30ed\u30fc\u30de\u5b57\u3067\u5165\u529b\u304b\u30af\u30ea\u30c3\u30af\uff01(\u4f8b: mi \u2192 \u307f)',
+          both:    '\u30ed\u30fc\u30de\u5b57\u3067\u5165\u529b\u304b\u30af\u30ea\u30c3\u30af\uff01',
         },
         contentLabel: {
           digits:  ['\u6570\u5b57',       '\u6570\u5b57'],
@@ -631,7 +659,7 @@
           letters: '\u3059\u3079\u3066\u306e\u3072\u3089\u304c\u306a',
           both:    '\u3059\u3079\u3066\u306e\u3072\u3089\u304c\u306a\u3068\u6570\u5b57',
         },
-        wasIt:    ch => `\u6b63\u89e3\u306f: ${ch} \u2014 \u7d9a\u3051\u3066\uff01`,
+        wasIt:    ch => `\u6b63\u89e3\u306f: ${ch}(${HIRAGANA_ROMAJI[ch] || ''}) \u2014 \u7d9a\u3051\u3066\uff01`,
         tryAgain: '\u3082\u3046\u4e00\u5ea6\uff01',
         correct:  '\ud83c\udf89 \u6b63\u89e3\uff01',
         quizScoreMsg: (found, score, total) =>
@@ -777,33 +805,38 @@
       return rawKey.toUpperCase();
     }
 
-    // ─── Romaji input buffer (Katakana language) ─────────────────────────────
-    // Accumulates typed Latin letters and converts them to a Katakana character
-    // using ROMAJI_KATAKANA_MAP.  Returns the matched character or null.
+    // ─── Romaji input buffer (Hiragana and Katakana languages) ───────────────
+    // Accumulates typed Latin letters and converts them to a Japanese syllable
+    // using the active romaji map.  Returns the matched character or null.
     // Special handling for 'n':
-    //   nn          → ン
+    //   nn          → ん / ン
     //   n + vowel   → na-row syllable (na, ni, nu, ne, no)
-    //   n + consonant → emit ン, start a new buffer with that consonant
+    //   n + consonant → emit ん/ン, start a new buffer with that consonant
     const VOWELS = 'aeiou';
     let romajiBuffer = '';
 
+    function getRomajiMap() {
+      return currentLangKey === 'ja' ? ROMAJI_HIRAGANA_MAP : ROMAJI_KATAKANA_MAP;
+    }
+
     function feedRomaji(letter) {
+      const romajiMap = getRomajiMap();
       const ch = letter.toLowerCase();
 
       // Pending lone 'n' in the buffer
       if (romajiBuffer === 'n') {
         if (ch === 'n') {
           romajiBuffer = '';
-          return '\u30f3'; // ン
+          return romajiMap['nn']; // ん or ン
         }
         if (!VOWELS.includes(ch)) {
-          // n + consonant → emit ン, restart buffer with this consonant
+          // n + consonant → emit ん/ン, restart buffer with this consonant
           romajiBuffer = ch;
-          return '\u30f3'; // ン
+          return romajiMap['nn']; // ん or ン
         }
         // n + vowel → na / ni / nu / ne / no
         romajiBuffer += ch;
-        const m = ROMAJI_KATAKANA_MAP[romajiBuffer];
+        const m = romajiMap[romajiBuffer];
         if (m) { romajiBuffer = ''; return m; }
         romajiBuffer = '';
         return null;
@@ -812,29 +845,31 @@
       romajiBuffer += ch;
 
       // Exact match
-      const match = ROMAJI_KATAKANA_MAP[romajiBuffer];
+      const match = romajiMap[romajiBuffer];
       if (match) { romajiBuffer = ''; return match; }
 
       // Lone 'n': wait for the next character
       if (romajiBuffer === 'n') return null;
 
       // Still a valid prefix of some romaji sequence?
-      if (Object.keys(ROMAJI_KATAKANA_MAP).some(k => k.startsWith(romajiBuffer))) return null;
+      if (Object.keys(romajiMap).some(k => k.startsWith(romajiBuffer))) return null;
 
       // Dead end: reset and try this character as a fresh start
       romajiBuffer = ch;
-      const fresh = ROMAJI_KATAKANA_MAP[ch];
+      const fresh = romajiMap[ch];
       if (fresh) { romajiBuffer = ''; return fresh; }
-      if (!Object.keys(ROMAJI_KATAKANA_MAP).some(k => k.startsWith(ch))) romajiBuffer = '';
+      if (!Object.keys(romajiMap).some(k => k.startsWith(ch))) romajiBuffer = '';
       return null;
     }
 
     // Returns the string to display in the lower span of the letter card.
     // • Digits       → '' (no lower display)
+    // • Hiragana     → canonical romaji from HIRAGANA_ROMAJI (e.g. み → 'mi')
     // • Katakana     → canonical romaji from KATAKANA_ROMAJI (e.g. ミ → 'mi')
     // • Other chars  → lowercase if different (e.g. A → 'a', А → 'а')
     function getLowerDisplay(ch) {
       if (/^[0-9]$/.test(ch)) return '';
+      if (currentLangKey === 'ja') return HIRAGANA_ROMAJI[ch] || '';
       if (currentLangKey === 'kt') return KATAKANA_ROMAJI[ch] || '';
       const lowerCh = ch.toLowerCase();
       return lowerCh !== ch ? lowerCh : '';
@@ -1076,8 +1111,8 @@
       // Resume audio context (required by browser autoplay policy)
       if (audioCtx.state === 'suspended') audioCtx.resume();
 
-      // Romaji input for the Katakana language (e.g. typing "mi" → ミ)
-      if (currentLangKey === 'kt' && /^[a-zA-Z]$/.test(e.key)) {
+      // Romaji input for Hiragana and Katakana languages
+      if ((currentLangKey === 'ja' || currentLangKey === 'kt') && /^[a-zA-Z]$/.test(e.key)) {
         const kana = feedRomaji(e.key);
         if (!kana) return; // still accumulating the romaji sequence
         const charset = getCharset();
