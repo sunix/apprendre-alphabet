@@ -318,6 +318,32 @@
       font-size: 1.1rem;
       line-height: 1;
     }
+
+    /* ─── GitHub star button ─── */
+    #github-star {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .3rem .75rem;
+      font-size: .85rem;
+      font-weight: 700;
+      text-decoration: none;
+      border: 2px solid rgba(255,255,255,.2);
+      border-radius: 50px;
+      background: transparent;
+      color: rgba(255,255,255,.6);
+      transition: all .2s;
+    }
+
+    #github-star:hover {
+      border-color: rgba(255,255,255,.45);
+      color: #fff;
+      background: rgba(255,255,255,.08);
+    }
   </style>
 </head>
 <body>
@@ -330,6 +356,10 @@
     <button class="mode-btn lang-btn" data-lang="de" aria-label="Deutsch">🇩🇪</button>
     <button class="mode-btn lang-btn" data-lang="it" aria-label="Italiano">🇮🇹</button>
   </div>
+
+  <a id="github-star" href="https://github.com/sunix/apprendre-alphabet" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">
+    ⭐ <span id="star-count">…</span>
+  </a>
 
   <div id="content-toggle">
     <button class="mode-btn active" id="btn-letters" aria-label="Sélectionner les lettres">🔤 Lettres</button>
@@ -1120,6 +1150,16 @@
     // ─── Init ────────────────────────────────────────────────────────────────
     setLanguage(currentLangKey);
     updateProgress();
+
+    // ─── GitHub star count ───────────────────────────────────────────────────
+    fetch('https://api.github.com/repos/sunix/apprendre-alphabet')
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(data => {
+        if (typeof data.stargazers_count === 'number') {
+          document.getElementById('star-count').textContent = data.stargazers_count;
+        }
+      })
+      .catch(() => { /* silently ignore network errors */ });
   </script>
 </body>
 </html>
