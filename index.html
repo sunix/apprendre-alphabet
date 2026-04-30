@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apprendre l'Alphabet</title>
+  <style>
+    /* ─── Reset & base ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1a1a2e;
+      --card: #16213e;
+      --accent: #e94560;
+      --letter-size: min(50vw, 50vh);
+      --radius: 24px;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: #fff;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* ─── Confetti canvas (behind everything) ─── */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Main stage ─── */
+    #stage {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      width: 100%;
+      padding: 1rem;
+    }
+
+    /* ─── Big letter card ─── */
+    #letter-card {
+      position: relative;
+      width: var(--letter-size);
+      height: var(--letter-size);
+      min-width: 180px;
+      min-height: 180px;
+      max-width: 340px;
+      max-height: 340px;
+      background: var(--card);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 4px var(--glow, transparent),
+                  0 20px 60px rgba(0,0,0,.5);
+      transition: box-shadow .3s, transform .1s;
+    }
+
+    #letter-card.pop {
+      animation: pop .35s cubic-bezier(.36,.07,.19,.97);
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.18); }
+      70%  { transform: scale(.93); }
+      100% { transform: scale(1); }
+    }
+
+    #letter-upper {
+      font-size: max(80px, calc(var(--letter-size) * .52));
+      line-height: 1;
+      font-weight: 900;
+      color: var(--glow, #fff);
+      text-shadow: 0 0 40px var(--glow, transparent);
+      transition: color .25s, text-shadow .25s;
+    }
+
+    #letter-lower {
+      font-size: calc(var(--letter-size) * .22);
+      line-height: 1;
+      font-weight: 700;
+      color: rgba(255,255,255,.55);
+      margin-top: .15em;
+    }
+
+    /* ─── Hint text ─── */
+    #hint {
+      font-size: clamp(1rem, 3vw, 1.4rem);
+      color: rgba(255,255,255,.5);
+      text-align: center;
+      letter-spacing: .05em;
+      transition: opacity .4s;
+    }
+
+    #hint.hidden { opacity: 0; }
+
+    /* ─── Progress bar ─── */
+    #progress-area {
+      width: min(90vw, 700px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    #progress-label {
+      font-size: clamp(.75rem, 2.5vw, 1rem);
+      color: rgba(255,255,255,.45);
+    }
+
+    #alphabet-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .alpha-dot {
+      width: clamp(22px, 4vw, 34px);
+      height: clamp(22px, 4vw, 34px);
+      border-radius: 6px;
+      background: rgba(255,255,255,.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(.6rem, 2vw, .85rem);
+      font-weight: 700;
+      color: rgba(255,255,255,.25);
+      transition: background .3s, color .3s, transform .2s;
+    }
+
+    .alpha-dot.done {
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    /* ─── Celebration banner ─── */
+    #celebration {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .5s;
+    }
+
+    #celebration.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #celebration h1 {
+      font-size: clamp(2.5rem, 10vw, 5rem);
+      animation: bounce 1s infinite alternate;
+    }
+
+    #celebration p {
+      margin-top: 1rem;
+      font-size: clamp(1rem, 4vw, 1.8rem);
+      color: rgba(255,255,255,.7);
+    }
+
+    #restart-btn {
+      margin-top: 2rem;
+      padding: .75rem 2rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: transform .15s;
+    }
+
+    #restart-btn:hover { transform: scale(1.06); }
+    #restart-btn:active { transform: scale(.96); }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-18px); }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div id="stage">
+    <div id="letter-card">
+      <span id="letter-upper">?</span>
+      <span id="letter-lower"></span>
+    </div>
+    <p id="hint">Appuie sur une touche du clavier&nbsp;!</p>
+    <div id="progress-area">
+      <span id="progress-label">0 / 26 lettres</span>
+      <div id="alphabet-row"></div>
+    </div>
+  </div>
+
+  <div id="celebration">
+    <h1>🎉 Bravo&nbsp;!</h1>
+    <p>Tu as tapé toutes les lettres de l'alphabet&nbsp;!</p>
+    <button id="restart-btn">Recommencer</button>
+  </div>
+
+  <script>
+    // ─── Palette: one colour per letter ─────────────────────────────────────
+    const COLORS = [
+      '#e94560','#ff6b6b','#ffa552','#ffd166','#06d6a0',
+      '#1b9aaa','#4361ee','#7209b7','#f72585','#4cc9f0',
+      '#90e0ef','#80b918','#e9c46a','#f4a261','#e76f51',
+      '#264653','#2a9d8f','#e9c46a','#f4a261','#e76f51',
+      '#e94560','#4361ee','#7209b7','#06d6a0','#ffd166','#ff6b6b',
+    ];
+
+    // ─── State ───────────────────────────────────────────────────────────────
+    const typed = new Set();
+    const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    // ─── DOM refs ────────────────────────────────────────────────────────────
+    const letterUpper  = document.getElementById('letter-upper');
+    const letterLower  = document.getElementById('letter-lower');
+    const letterCard   = document.getElementById('letter-card');
+    const hint         = document.getElementById('hint');
+    const progressLabel= document.getElementById('progress-label');
+    const alphabetRow  = document.getElementById('alphabet-row');
+    const celebration  = document.getElementById('celebration');
+    const restartBtn   = document.getElementById('restart-btn');
+    const canvas       = document.getElementById('confetti-canvas');
+    const ctx          = canvas.getContext('2d');
+
+    // ─── Build alphabet dots ─────────────────────────────────────────────────
+    ALPHABET.split('').forEach((ch, i) => {
+      const dot = document.createElement('div');
+      dot.className = 'alpha-dot';
+      dot.id = 'dot-' + ch;
+      dot.textContent = ch;
+      dot.style.setProperty('--dot-color', COLORS[i]);
+      alphabetRow.appendChild(dot);
+    });
+
+    // ─── Audio: tiny beep via Web Audio API ─────────────────────────────────
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq = 440, type = 'sine', duration = 0.18) {
+      const osc  = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playLetterSound(index) {
+      // Rising scale: C4 = 261.63 Hz; multiply by 2 semitones per letter
+      // (whole-tone steps) so adjacent letters produce a clearly different pitch.
+      const base = 261.63;
+      const TONE_STEP = 2; // whole-tone interval (2 semitones) between letters
+      const freq = base * Math.pow(1.059463, index * TONE_STEP);
+      playTone(freq, 'triangle', 0.22);
+    }
+
+    function playCelebration() {
+      [0, 4, 7, 12].forEach((semi, i) => {
+        setTimeout(() => {
+          playTone(523.25 * Math.pow(1.059463, semi), 'triangle', 0.3);
+        }, i * 160);
+      });
+    }
+
+    // ─── Confetti ────────────────────────────────────────────────────────────
+    const CONFETTI_COUNT_SMALL       = 25;  // per-letter burst
+    const CONFETTI_COUNT_DEFAULT     = 80;  // default burst size
+    const CONFETTI_COUNT_CELEBRATION = 200; // full-alphabet celebration
+    const CONFETTI_GRAVITY           = 0.1; // px/frame² acceleration
+    const CONFETTI_MAX_VELOCITY      = 10;  // px/frame terminal velocity
+
+    let confettiPieces = [];
+    let confettiAnim   = null;
+
+    function resizeCanvas() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function spawnConfetti(count = CONFETTI_COUNT_DEFAULT) {
+      for (let i = 0; i < count; i++) {
+        confettiPieces.push({
+          x: Math.random() * canvas.width,
+          y: -10,
+          w: 8 + Math.random() * 8,
+          h: 4 + Math.random() * 4,
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          vx: (Math.random() - .5) * 4,
+          vy: 3 + Math.random() * 4,
+          rot: Math.random() * Math.PI * 2,
+          rotV: (Math.random() - .5) * .2,
+        });
+      }
+      if (!confettiAnim) tickConfetti();
+    }
+
+    function tickConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 20);
+
+      confettiPieces.forEach(p => {
+        p.x  += p.vx;
+        p.y  += p.vy;
+        p.rot += p.rotV;
+        p.vy  = Math.min(p.vy + CONFETTI_GRAVITY, CONFETTI_MAX_VELOCITY);
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+
+      if (confettiPieces.length > 0) {
+        confettiAnim = requestAnimationFrame(tickConfetti);
+      } else {
+        confettiAnim = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // ─── Show letter ─────────────────────────────────────────────────────────
+    function showLetter(ch) {
+      const index = ALPHABET.indexOf(ch);
+      const color = COLORS[index];
+
+      letterCard.style.setProperty('--glow', color);
+      letterUpper.textContent = ch;
+      letterLower.textContent = ch.toLowerCase();
+
+      // Pop animation (re-trigger)
+      letterCard.classList.remove('pop');
+      void letterCard.offsetWidth; // reflow
+      letterCard.classList.add('pop');
+
+      hint.classList.add('hidden');
+      playLetterSound(index);
+      spawnConfetti(CONFETTI_COUNT_SMALL);
+    }
+
+    // ─── Update progress ─────────────────────────────────────────────────────
+    function updateProgress() {
+      progressLabel.textContent = `${typed.size} / 26 lettres`;
+
+      ALPHABET.split('').forEach((ch, i) => {
+        const dot = document.getElementById('dot-' + ch);
+        if (typed.has(ch)) {
+          dot.classList.add('done');
+          dot.style.background = COLORS[i];
+        }
+      });
+    }
+
+    // ─── Keyboard handler ────────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      // Resume audio context (required by browser autoplay policy)
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const key = e.key.toUpperCase();
+      if (!/^[A-Z]$/.test(key)) return;
+
+      showLetter(key);
+      typed.add(key);
+      updateProgress();
+
+      if (typed.size === 26) {
+        setTimeout(() => {
+          playCelebration();
+          spawnConfetti(CONFETTI_COUNT_CELEBRATION);
+          celebration.classList.add('show');
+        }, 400);
+      }
+    });
+
+    // ─── Restart ─────────────────────────────────────────────────────────────
+    function restart() {
+      typed.clear();
+      letterUpper.textContent = '?';
+      letterLower.textContent = '';
+      letterCard.style.setProperty('--glow', 'transparent');
+      hint.classList.remove('hidden');
+      celebration.classList.remove('show');
+      ALPHABET.split('').forEach(ch => {
+        const dot = document.getElementById('dot-' + ch);
+        dot.classList.remove('done');
+        dot.style.background = '';
+      });
+      updateProgress();
+      confettiPieces = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    restartBtn.addEventListener('click', restart);
+
+    // ─── Init ────────────────────────────────────────────────────────────────
+    updateProgress();
+  </script>
+</body>
+</html>
