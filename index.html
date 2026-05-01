@@ -533,7 +533,7 @@
   <canvas id="confetti-canvas"></canvas>
 
   <!-- ─── GitHub star (fixed, always visible) ─────────────────────── -->
-  <a id="github-star" class="mode-btn" href="https://github.com/sunix/apprendre-alphabet" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">⭐ <span id="star-count">…</span></a>
+  <a id="github-star" class="mode-btn" href="https://github.com/sunix/apprendre-alphabet" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">⭐ <span id="star-count" aria-live="polite" aria-label="star count">…</span></a>
 
   <!-- ─── Welcome screen ──────────────────────────────────────────── -->
   <div id="welcome-screen" class="show">
@@ -1347,7 +1347,12 @@
 
     function addHighscore(key, name, score, total) {
       const scores = loadHighscores(key);
-      const entry = { name: name || '?', score, date: new Date().toLocaleDateString() };
+      const entry = {
+        name: name || '?',
+        score,
+        mode: quizMode ? 'quiz' : 'explore',
+        date: new Date().toISOString().split('T')[0],
+      };
       if (total !== undefined) entry.total = total;
       scores.push(entry);
       scores.sort((a, b) => quizMode ? b.score - a.score : a.score - b.score);
@@ -1364,8 +1369,8 @@
       container.innerHTML = scores.map((s, i) => {
         const medal = ['🥇', '🥈', '🥉'][i] || `#${i + 1}`;
         const cls   = ['hs-gold', 'hs-silver', 'hs-bronze'][i] || '';
-        const scoreDisplay = s.total !== undefined
-          ? `${s.score} / ${s.total}`
+        const scoreDisplay = s.mode === 'quiz'
+          ? `${s.score} / ${s.total ?? '?'}`
           : `${(s.score / 1000).toFixed(1)}s`;
         return `<div class="hs-row${cls ? ' ' + cls : ''}">` +
           `<span class="hs-rank">${medal}</span>` +
@@ -1400,7 +1405,7 @@
       const hsEntry    = document.getElementById('highscore-entry');
       const celebScores = document.getElementById('celebration-scores');
 
-      if (score > 0 && isNewHighscore(scores, score)) {
+      if (isNewHighscore(scores, score)) {
         pendingHighscore = { key, score, total };
         document.getElementById('highscore-new-msg').textContent = lang.newHighscore;
         document.getElementById('highscore-name-input').placeholder = lang.enterName;
