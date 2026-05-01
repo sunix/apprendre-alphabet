@@ -2002,11 +2002,11 @@
       if (celebration.classList.contains('show')) {
         if (document.activeElement === document.getElementById('highscore-name-input')) return;
         const celebBtns = [restartBtn, welcomeBtnEl];
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
           e.preventDefault();
           const focused = celebBtns.findIndex(b => b.classList.contains('kb-btn-focus'));
           const cur = focused >= 0 ? focused : 0;
-          const newIdx = (cur + (e.key === 'ArrowRight' ? 1 : -1) + celebBtns.length) % celebBtns.length;
+          const newIdx = (cur + (e.key === 'ArrowDown' ? 1 : -1) + celebBtns.length) % celebBtns.length;
           celebBtns.forEach(b => b.classList.remove('kb-btn-focus'));
           celebBtns[newIdx].classList.add('kb-btn-focus');
         } else if (e.key === 'Enter' || e.key === ' ') {
