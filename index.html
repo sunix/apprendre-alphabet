@@ -309,8 +309,12 @@
       line-height: 1;
     }
 
-    /* ─── GitHub star button ─── */
+    /* ─── GitHub star button (fixed, always visible) ─── */
     #github-star {
+      position: fixed;
+      top: .8rem;
+      right: .8rem;
+      z-index: 100;
       display: inline-flex;
       align-items: center;
       gap: .35rem;
@@ -407,7 +411,7 @@
     #back-btn {
       position: fixed;
       top: .8rem;
-      right: .8rem;
+      left: .8rem;
       z-index: 5;
       display: none;
     }
@@ -430,10 +434,106 @@
       border-color: rgba(255,255,255,.6);
       color: #fff;
     }
+
+    /* ─── Highscores list ─── */
+    .hs-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+    }
+
+    .hs-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .3rem .7rem;
+      border-radius: 8px;
+      background: rgba(255,255,255,.05);
+      font-size: .85rem;
+    }
+
+    .hs-row.hs-gold   { background: rgba(255,215,0,.15); }
+    .hs-row.hs-silver { background: rgba(192,192,192,.1); }
+    .hs-row.hs-bronze { background: rgba(205,127,50,.1); }
+
+    .hs-rank  { min-width: 2rem; text-align: center; }
+    .hs-name  { flex: 1; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hs-score { font-weight: 700; color: var(--accent); }
+
+    .hs-empty {
+      font-size: .85rem;
+      color: rgba(255,255,255,.4);
+      font-style: italic;
+      text-align: center;
+      padding: .4rem 0;
+    }
+
+    #highscores-list {
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    /* ─── Name-entry form in celebration ─── */
+    #highscore-entry {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .55rem;
+      margin-top: .8rem;
+    }
+
+    #highscore-new-msg {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffd166;
+    }
+
+    #highscore-input-row {
+      display: flex;
+      gap: .4rem;
+      align-items: center;
+    }
+
+    #highscore-name-input {
+      padding: .4rem .85rem;
+      font-size: 1rem;
+      border-radius: 50px;
+      border: 2px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.1);
+      color: #fff;
+      outline: none;
+      width: 150px;
+    }
+
+    #highscore-name-input::placeholder { color: rgba(255,255,255,.4); }
+
+    #highscore-save-btn {
+      padding: .4rem 1rem;
+      font-size: .9rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: transform .15s;
+    }
+
+    #highscore-save-btn:hover  { transform: scale(1.06); }
+    #highscore-save-btn:active { transform: scale(.96); }
+
+    #celebration-scores {
+      margin-top: .8rem;
+      width: min(90vw, 360px);
+    }
   </style>
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
+
+  <!-- ─── GitHub star (fixed, always visible) ─────────────────────── -->
+  <a id="github-star" class="mode-btn" href="https://github.com/sunix/apprendre-alphabet" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">⭐ <span id="star-count" aria-live="polite" aria-label="star count">…</span></a>
 
   <!-- ─── Welcome screen ──────────────────────────────────────────── -->
   <div id="welcome-screen" class="show">
@@ -476,7 +576,10 @@
 
       <button id="start-btn">&#9654;&nbsp;Jouer&nbsp;!</button>
 
-      <a id="github-star" class="mode-btn" href="https://github.com/sunix/apprendre-alphabet" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">⭐ <span id="star-count">…</span></a>
+      <div class="welcome-section" id="highscores-section">
+        <div class="welcome-label" id="lbl-highscores">🏆 Meilleurs scores</div>
+        <div id="highscores-list" class="hs-list"></div>
+      </div>
     </div>
   </div>
 
@@ -503,6 +606,14 @@
   <div id="celebration">
     <h1>🎉 Bravo&nbsp;!</h1>
     <p>Tu as tapé toutes les lettres de l'alphabet&nbsp;!</p>
+    <div id="highscore-entry" style="display:none">
+      <p id="highscore-new-msg">🏆 Nouveau record&nbsp;!</p>
+      <div id="highscore-input-row">
+        <input id="highscore-name-input" type="text" maxlength="20" autocomplete="off" placeholder="Ton prénom…" />
+        <button id="highscore-save-btn">Enregistrer</button>
+      </div>
+    </div>
+    <div id="celebration-scores" class="hs-list"></div>
     <button id="restart-btn">Recommencer</button>
     <button id="welcome-btn">⚙️ Options</button>
   </div>
@@ -619,6 +730,12 @@
         quizDesc:      "Trouve la lettre affich\u00e9e avant que le temps soit \u00e9coul\u00e9\u00a0!",
         startBtn:      "\u25b6\u00a0Jouer\u00a0!",
         backBtn:       "\u2699\ufe0f\u00a0Options",
+        highscoresTitle: '🏆 Meilleurs scores',
+        newHighscore:    '🏆 Nouveau record\u00a0!',
+        enterName:       'Ton pr\u00e9nom\u2026',
+        saveBtn:         'Enregistrer',
+        noScoresYet:     'Pas encore de score',
+        exploreScoreMsg: s => `Compl\u00e9t\u00e9 en ${s}s\u00a0!`,
       },
       en: {
         speechCode: 'en-GB',
@@ -667,6 +784,12 @@
         quizDesc:      'Find the displayed character before the timer runs out!',
         startBtn:      '\u25b6\u00a0Play!',
         backBtn:       '\u2699\ufe0f\u00a0Settings',
+        highscoresTitle: '🏆 Highscores',
+        newHighscore:    '🏆 New highscore!',
+        enterName:       'Your name\u2026',
+        saveBtn:         'Save',
+        noScoresYet:     'No scores yet',
+        exploreScoreMsg: s => `Completed in ${s}s!`,
       },
       es: {
         speechCode: 'es-ES',
@@ -715,6 +838,12 @@
         quizDesc:      '\u00a1Encuentra el car\u00e1cter mostrado antes de que se acabe el tiempo!',
         startBtn:      '\u25b6\u00a0\u00a1Jugar!',
         backBtn:       '\u2699\ufe0f\u00a0Opciones',
+        highscoresTitle: '🏆 Mejores puntuaciones',
+        newHighscore:    '🏆 \u00a1Nueva puntuaci\u00f3n m\u00e1xima!',
+        enterName:       'Tu nombre\u2026',
+        saveBtn:         'Guardar',
+        noScoresYet:     'A\u00fan no hay puntuaciones',
+        exploreScoreMsg: s => `Completado en ${s}s!`,
       },
       de: {
         speechCode: 'de-DE',
@@ -763,6 +892,12 @@
         quizDesc:      'Finde das angezeigte Zeichen, bevor die Zeit abl\u00e4uft!',
         startBtn:      '\u25b6\u00a0Spielen!',
         backBtn:       '\u2699\ufe0f\u00a0Einstellungen',
+        highscoresTitle: '🏆 Bestenliste',
+        newHighscore:    '🏆 Neuer Rekord!',
+        enterName:       'Dein Name\u2026',
+        saveBtn:         'Speichern',
+        noScoresYet:     'Noch keine Eintr\u00e4ge',
+        exploreScoreMsg: s => `Abgeschlossen in ${s}s!`,
       },
       it: {
         speechCode: 'it-IT',
@@ -811,6 +946,12 @@
         quizDesc:      'Trova il carattere mostrato prima che scada il tempo!',
         startBtn:      '\u25b6\u00a0Giocare!',
         backBtn:       '\u2699\ufe0f\u00a0Opzioni',
+        highscoresTitle: '🏆 Migliori punteggi',
+        newHighscore:    '🏆 Nuovo record!',
+        enterName:       'Il tuo nome\u2026',
+        saveBtn:         'Salva',
+        noScoresYet:     'Ancora nessun punteggio',
+        exploreScoreMsg: s => `Completato in ${s}s!`,
       },
       ja: {
         speechCode: 'ja-JP',
@@ -859,6 +1000,12 @@
         quizDesc:      '\u30bf\u30a4\u30e0\u30a2\u30c3\u30d7\u306b\u306a\u308b\u524d\u306b\u3001\u8868\u793a\u3055\u308c\u305f\u6587\u5b57\u3092\u898b\u3064\u3051\u3088\u3046\uff01',
         startBtn:      '\u25b6 \u3042\u305d\u3076\uff01',
         backBtn:       '\u2699\ufe0f \u305b\u3063\u3066\u3044',
+        highscoresTitle: '🏆 \u30cf\u30a4\u30b9\u30b3\u30a2',
+        newHighscore:    '🏆 \u65b0\u8a18\u9332\uff01',
+        enterName:       '\u540d\u524d\u2026',
+        saveBtn:         '\u4fdd\u5b58',
+        noScoresYet:     '\u307e\u3060\u30b9\u30b3\u30a2\u306a\u3057',
+        exploreScoreMsg: s => `${s}\u79d2\u3067\u5b8c\u4e86\uff01`,
       },
       kt: {
         speechCode: 'ja-JP',
@@ -907,6 +1054,12 @@
         quizDesc:      '\u30bf\u30a4\u30e0\u30a2\u30c3\u30d7\u306b\u306a\u308b\u524d\u306b\u3001\u8868\u793a\u3055\u308c\u305f\u6587\u5b57\u3092\u898b\u3064\u3051\u3088\u3046\uff01',
         startBtn:      '\u25b6 \u3042\u305d\u3076\uff01',
         backBtn:       '\u2699\ufe0f \u305b\u3063\u3066\u3044',
+        highscoresTitle: '🏆 \u30cf\u30a4\u30b9\u30b3\u30a2',
+        newHighscore:    '🏆 \u65b0\u8a18\u9332\uff01',
+        enterName:       '\u540d\u524d\u2026',
+        saveBtn:         '\u4fdd\u5b58',
+        noScoresYet:     '\u307e\u3060\u30b9\u30b3\u30a2\u306a\u3057',
+        exploreScoreMsg: s => `${s}\u79d2\u3067\u5b8c\u4e86\uff01`,
       },
       ru: {
         speechCode: 'ru-RU',
@@ -955,6 +1108,12 @@
         quizDesc:      '\u041d\u0430\u0439\u0434\u0438 \u043f\u043e\u043a\u0430\u0437\u0430\u043d\u043d\u044b\u0439 \u0441\u0438\u043c\u0432\u043e\u043b \u0434\u043e \u0438\u0441\u0442\u0435\u0447\u0435\u043d\u0438\u044f \u0432\u0440\u0435\u043c\u0435\u043d\u0438!',
         startBtn:      '\u25b6\u00a0\u0418\u0433\u0440\u0430\u0442\u044c!',
         backBtn:       '\u2699\ufe0f\u00a0\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438',
+        highscoresTitle: '🏆 \u0420\u0435\u043a\u043e\u0440\u0434\u044b',
+        newHighscore:    '🏆 \u041d\u043e\u0432\u044b\u0439 \u0440\u0435\u043a\u043e\u0440\u0434!',
+        enterName:       '\u0422\u0432\u043e\u0451 \u0438\u043c\u044f\u2026',
+        saveBtn:         '\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c',
+        noScoresYet:     '\u041f\u043e\u043a\u0430 \u043d\u0435\u0442 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u043e\u0432',
+        exploreScoreMsg: s => `\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u043e \u0437\u0430 ${s}\u0441!`,
       },
       uk: {
         speechCode: 'uk-UA',
@@ -1003,6 +1162,12 @@
         quizDesc:      '\u0417\u043d\u0430\u0439\u0434\u0438 \u043f\u043e\u043a\u0430\u0437\u0430\u043d\u0438\u0439 \u0441\u0438\u043c\u0432\u043e\u043b \u0434\u043e \u0437\u0430\u043a\u0456\u043d\u0447\u0435\u043d\u043d\u044f \u0447\u0430\u0441\u0443!',
         startBtn:      '\u25b6\u00a0\u0413\u0440\u0430\u0442\u0438!',
         backBtn:       '\u2699\ufe0f\u00a0\u041d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u043d\u043d\u044f',
+        highscoresTitle: '🏆 \u0420\u0435\u043a\u043e\u0440\u0434\u0438',
+        newHighscore:    '🏆 \u041d\u043e\u0432\u0438\u0439 \u0440\u0435\u043a\u043e\u0440\u0434!',
+        enterName:       '\u0422\u0432\u043e\u0454 \u0456\u043c\u2019\u044f\u2026',
+        saveBtn:         '\u0417\u0431\u0435\u0440\u0435\u0433\u0442\u0438',
+        noScoresYet:     '\u041f\u043e\u043a\u0438 \u043d\u0435\u043c\u0430\u0454 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u0456\u0432',
+        exploreScoreMsg: s => `\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u043e \u0437\u0430 ${s}\u0441!`,
       },
     };
 
@@ -1106,8 +1271,10 @@
     const typed = new Set();
     const DIGITS   = '0123456789';
 
-    let contentType = 'letters'; // 'letters' | 'digits' | 'both'
-    let gameActive  = false;     // true once the user presses Start
+    let contentType      = 'letters'; // 'letters' | 'digits' | 'both'
+    let gameActive       = false;     // true once the user presses Start
+    let exploreStartTime = null;      // timestamp when first explore key is pressed
+    let pendingHighscore = null;      // { key, score, total } waiting for a name
 
     function getCharset() {
       const alpha = getLang().alphabet.split('');
@@ -1159,6 +1326,102 @@
     const startBtnEl     = document.getElementById('start-btn');
     const backBtnEl      = document.getElementById('back-btn');
     const welcomeBtnEl   = document.getElementById('welcome-btn');
+    const lblHighscores  = document.getElementById('lbl-highscores');
+
+    // ─── Highscore helpers ───────────────────────────────────────────────────
+    function getHighscoreKey() {
+      return `hs_${currentLangKey}_${contentType}_${quizMode ? 'quiz' : 'explore'}`;
+    }
+
+    function loadHighscores(key) {
+      try { return JSON.parse(localStorage.getItem(key) || '[]'); }
+      catch { return []; }
+    }
+
+    function isNewHighscore(scores, score) {
+      if (scores.length < 10) return true;
+      // Quiz: higher is better.  Explore: lower (faster) is better.
+      return quizMode ? score > scores[scores.length - 1].score
+                      : score < scores[scores.length - 1].score;
+    }
+
+    function addHighscore(key, name, score, total) {
+      const scores = loadHighscores(key);
+      const entry = {
+        name: name || '?',
+        score,
+        mode: quizMode ? 'quiz' : 'explore',
+        date: new Date().toISOString().split('T')[0],
+      };
+      if (total !== undefined) entry.total = total;
+      scores.push(entry);
+      scores.sort((a, b) => quizMode ? b.score - a.score : a.score - b.score);
+      if (scores.length > 10) scores.pop();
+      localStorage.setItem(key, JSON.stringify(scores));
+      return scores;
+    }
+
+    function renderScoresList(scores, container) {
+      if (!scores.length) {
+        container.innerHTML = `<p class="hs-empty">${getLang().noScoresYet}</p>`;
+        return;
+      }
+      container.innerHTML = scores.map((s, i) => {
+        const medal = ['🥇', '🥈', '🥉'][i] || `#${i + 1}`;
+        const cls   = ['hs-gold', 'hs-silver', 'hs-bronze'][i] || '';
+        const scoreDisplay = s.mode === 'quiz'
+          ? `${s.score} / ${s.total ?? '?'}`
+          : `${(s.score / 1000).toFixed(1)}s`;
+        return `<div class="hs-row${cls ? ' ' + cls : ''}">` +
+          `<span class="hs-rank">${medal}</span>` +
+          `<span class="hs-name">${s.name}</span>` +
+          `<span class="hs-score">${scoreDisplay}</span>` +
+          `</div>`;
+      }).join('');
+    }
+
+    function renderHighscoresInWelcome() {
+      const key    = getHighscoreKey();
+      const scores = loadHighscores(key);
+      renderScoresList(scores, document.getElementById('highscores-list'));
+    }
+
+    function showCelebration(score, total) {
+      playCelebration();
+      spawnConfetti(CONFETTI_COUNT_CELEBRATION);
+
+      const lang = getLang();
+      if (quizMode) {
+        const found = lang.quizFoundAll[contentType];
+        document.querySelector('#celebration p').textContent =
+          lang.quizScoreMsg(found, score, total);
+      } else {
+        document.querySelector('#celebration p').textContent =
+          lang.exploreScoreMsg((score / 1000).toFixed(1));
+      }
+
+      const key    = getHighscoreKey();
+      const scores = loadHighscores(key);
+      const hsEntry    = document.getElementById('highscore-entry');
+      const celebScores = document.getElementById('celebration-scores');
+
+      if (isNewHighscore(scores, score)) {
+        pendingHighscore = { key, score, total };
+        document.getElementById('highscore-new-msg').textContent = lang.newHighscore;
+        document.getElementById('highscore-name-input').placeholder = lang.enterName;
+        document.getElementById('highscore-save-btn').textContent  = lang.saveBtn;
+        document.getElementById('highscore-name-input').value = '';
+        hsEntry.style.display = '';
+        celebScores.innerHTML = '';
+        setTimeout(() => document.getElementById('highscore-name-input').focus(), 50);
+      } else {
+        pendingHighscore = null;
+        hsEntry.style.display = 'none';
+        renderScoresList(scores, celebScores);
+      }
+
+      celebration.classList.add('show');
+    }
 
     // ─── Build character dots ────────────────────────────────────────────────
     function buildDots() {
@@ -1174,16 +1437,14 @@
           if (quizMode) {
             handleQuizKey(ch);
           } else {
+            if (typed.size === 0) exploreStartTime = Date.now();
             showLetter(ch);
             typed.add(ch);
             updateProgress();
             const charset = getCharset();
             if (typed.size === charset.length) {
-              setTimeout(() => {
-                playCelebration();
-                spawnConfetti(CONFETTI_COUNT_CELEBRATION);
-                celebration.classList.add('show');
-              }, 400);
+              const elapsedMs = exploreStartTime ? Date.now() - exploreStartTime : 0;
+              setTimeout(() => showCelebration(elapsedMs), 400);
             }
           }
         });
@@ -1336,8 +1597,9 @@
       // Resume audio context (required by browser autoplay policy)
       if (audioCtx.state === 'suspended') audioCtx.resume();
 
-      // Ignore key events when the welcome screen is visible
+      // Ignore key events when the welcome screen or celebration overlay is visible
       if (!gameActive) return;
+      if (celebration.classList.contains('show')) return;
 
       // Romaji input for Hiragana and Katakana languages
       if ((currentLangKey === 'ja' || currentLangKey === 'kt') && /^[a-zA-Z]$/.test(e.key)) {
@@ -1348,15 +1610,13 @@
         if (quizMode) {
           handleQuizKey(kana);
         } else {
+          if (typed.size === 0) exploreStartTime = Date.now();
           showLetter(kana);
           typed.add(kana);
           updateProgress();
           if (typed.size === charset.length) {
-            setTimeout(() => {
-              playCelebration();
-              spawnConfetti(CONFETTI_COUNT_CELEBRATION);
-              celebration.classList.add('show');
-            }, 400);
+            const elapsedMs = exploreStartTime ? Date.now() - exploreStartTime : 0;
+            setTimeout(() => showCelebration(elapsedMs), 400);
           }
         }
         return;
@@ -1371,16 +1631,14 @@
         return;
       }
 
+      if (typed.size === 0) exploreStartTime = Date.now();
       showLetter(key);
       typed.add(key);
       updateProgress();
 
       if (typed.size === charset.length) {
-        setTimeout(() => {
-          playCelebration();
-          spawnConfetti(CONFETTI_COUNT_CELEBRATION);
-          celebration.classList.add('show');
-        }, 400);
+        const elapsedMs = exploreStartTime ? Date.now() - exploreStartTime : 0;
+        setTimeout(() => showCelebration(elapsedMs), 400);
       }
     });
 
@@ -1410,6 +1668,7 @@
         if (gameActive) { stopQuiz(); restart(); }
       }
       updateWelcomeModeDesc();
+      renderHighscoresInWelcome();
     }
 
     btnExplore.addEventListener('click', () => setMode('explore'));
@@ -1449,16 +1708,9 @@
 
     function startNextQuizLetter() {
       if (quizRemaining.length === 0) {
+        const total = getCharset().length;
         stopQuiz();
-        setTimeout(() => {
-          playCelebration();
-          spawnConfetti(CONFETTI_COUNT_CELEBRATION);
-          const charset = getCharset();
-          const found = getLang().quizFoundAll[contentType];
-          document.querySelector('#celebration p').textContent =
-            getLang().quizScoreMsg(found, quizScore, charset.length);
-          celebration.classList.add('show');
-        }, 400);
+        setTimeout(() => showCelebration(quizScore, total), 400);
         return;
       }
 
@@ -1575,6 +1827,7 @@
     function restart() {
       romajiBuffer = '';
       typed.clear();
+      exploreStartTime = null;
       letterUpper.textContent = '?';
       letterLower.textContent = '';
       letterCard.style.setProperty('--glow', 'transparent');
@@ -1619,6 +1872,7 @@
           restart();
         }
       }
+      renderHighscoresInWelcome();
     }
 
     btnLetters.addEventListener('click', () => setContentType('letters'));
@@ -1677,6 +1931,10 @@
           restart();
         }
       }
+
+      // Update highscores label and list for the new language
+      lblHighscores.textContent = lang.highscoresTitle;
+      renderHighscoresInWelcome();
     }
 
     document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -1697,12 +1955,14 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       welcomeScreen.classList.add('show');
       backBtnEl.style.display = 'none';
+      renderHighscoresInWelcome();
     }
 
     startBtnEl.addEventListener('click', () => {
       gameActive = true;
       welcomeScreen.classList.remove('show');
       backBtnEl.style.display = 'inline-block';
+      exploreStartTime = null;
       buildDots();
       if (quizMode) startQuiz(); else restart();
     });
@@ -1710,9 +1970,25 @@
     backBtnEl.addEventListener('click', showWelcome);
     welcomeBtnEl.addEventListener('click', showWelcome);
 
+    // ─── Highscore name-save listeners ───────────────────────────────────────
+    document.getElementById('highscore-save-btn').addEventListener('click', () => {
+      if (!pendingHighscore) return;
+      const name = document.getElementById('highscore-name-input').value.trim() || '?';
+      const { key, score, total } = pendingHighscore;
+      const updatedScores = addHighscore(key, name, score, total);
+      pendingHighscore = null;
+      document.getElementById('highscore-entry').style.display = 'none';
+      renderScoresList(updatedScores, document.getElementById('celebration-scores'));
+    });
+
+    document.getElementById('highscore-name-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('highscore-save-btn').click();
+    });
+
     // ─── Init ────────────────────────────────────────────────────────────────
     setLanguage(currentLangKey);
     updateProgress();
+    renderHighscoresInWelcome();
 
     // ─── GitHub star count ───────────────────────────────────────────────────
     fetch('https://api.github.com/repos/sunix/apprendre-alphabet')
