@@ -1517,7 +1517,7 @@
     function speakLetter(ch) {
       if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(ch);
+      const utter = new SpeechSynthesisUtterance(ch.toLowerCase());
       utter.lang = getLang().speechCode;
       utter.rate = 0.8;
       window.speechSynthesis.speak(utter);
