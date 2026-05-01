@@ -2073,7 +2073,8 @@
 
     // ─── Welcome screen keyboard navigation ─────────────────────────────────
     // Rows: 0=lang, 1=content, 2=mode, 3=start
-    let welcomeFocusRow = 2; // default focus on mode row
+    const DEFAULT_WELCOME_FOCUS_ROW = 2; // default focus on mode row
+    let welcomeFocusRow = DEFAULT_WELCOME_FOCUS_ROW;
 
     const WEL_ROWS = [
       {
@@ -2482,7 +2483,7 @@
       mobileRomajiInput.blur();
       renderHighscoresInWelcome();
       startMusic('welcome');
-      welcomeFocusRow = 2; // reset focus to mode row
+      welcomeFocusRow = DEFAULT_WELCOME_FOCUS_ROW; // reset focus to mode row
       updateWelcomeKbFocus();
     }
 
