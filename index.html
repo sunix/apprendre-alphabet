@@ -604,6 +604,14 @@
         <p id="welcome-mode-desc">Appuie sur les touches du clavier pour découvrir les lettres une par une.</p>
       </div>
 
+      <div class="welcome-section" id="romaji-options-section" style="display:none">
+        <div class="welcome-label" id="lbl-romaji-options"></div>
+        <div id="romaji-hint-toggle">
+          <button class="mode-btn active" id="btn-romaji-show"></button>
+          <button class="mode-btn" id="btn-romaji-hide"></button>
+        </div>
+      </div>
+
       <button id="start-btn">&#9654;&nbsp;Jouer&nbsp;!</button>
 
       <div class="welcome-section" id="highscores-section">
@@ -1041,6 +1049,9 @@
         saveBtn:         '\u4fdd\u5b58',
         noScoresYet:     '\u307e\u3060\u30b9\u30b3\u30a2\u306a\u3057',
         exploreScoreMsg: s => `${s}\u79d2\u3067\u5b8c\u4e86\uff01`,
+        chooseRomaji:    '\u30af\u30a4\u30ba\u306e\u30ed\u30fc\u30de\u5b57\u30d2\u30f3\u30c8',
+        romajiShowBtn:   '\ud83d\udc41\ufe0f \u30ed\u30fc\u30de\u5b57\u3042\u308a',
+        romajiHideBtn:   '\ud83d\ude48 \u30ed\u30fc\u30de\u5b57\u306a\u3057',
       },
       kt: {
         speechCode: 'ja-JP',
@@ -1095,6 +1106,9 @@
         saveBtn:         '\u4fdd\u5b58',
         noScoresYet:     '\u307e\u3060\u30b9\u30b3\u30a2\u306a\u3057',
         exploreScoreMsg: s => `${s}\u79d2\u3067\u5b8c\u4e86\uff01`,
+        chooseRomaji:    '\u30af\u30a4\u30ba\u306e\u30ed\u30fc\u30de\u5b57\u30d2\u30f3\u30c8',
+        romajiShowBtn:   '\ud83d\udc41\ufe0f \u30ed\u30fc\u30de\u5b57\u3042\u308a',
+        romajiHideBtn:   '\ud83d\ude48 \u30ed\u30fc\u30de\u5b57\u306a\u3057',
       },
       ru: {
         speechCode: 'ru-RU',
@@ -1311,6 +1325,7 @@
     let gameActive       = false;     // true once the user presses Start
     let exploreStartTime = null;      // timestamp when first explore key is pressed
     let pendingHighscore = null;      // { key, score, total } waiting for a name
+    let hideRomaji       = localStorage.getItem('hideRomaji') === 'true';
 
     function getCharset() {
       const alpha = getLang().alphabet.split('');
@@ -1364,6 +1379,10 @@
     const welcomeBtnEl   = document.getElementById('welcome-btn');
     const lblHighscores  = document.getElementById('lbl-highscores');
     const mobileRomajiInput = document.getElementById('mobile-romaji-input');
+    const romajiOptionsSection = document.getElementById('romaji-options-section');
+    const lblRomajiOptions = document.getElementById('lbl-romaji-options');
+    const btnRomajiShow  = document.getElementById('btn-romaji-show');
+    const btnRomajiHide  = document.getElementById('btn-romaji-hide');
 
     // ─── Highscore helpers ───────────────────────────────────────────────────
     function getHighscoreKey() {
@@ -1901,6 +1920,23 @@
     btnExplore.addEventListener('click', () => setMode('explore'));
     btnQuiz.addEventListener('click', () => setMode('quiz'));
 
+    function updateRomajiToggleUI() {
+      btnRomajiShow.classList.toggle('active', !hideRomaji);
+      btnRomajiHide.classList.toggle('active', hideRomaji);
+    }
+
+    btnRomajiShow.addEventListener('click', () => {
+      hideRomaji = false;
+      localStorage.setItem('hideRomaji', 'false');
+      updateRomajiToggleUI();
+    });
+
+    btnRomajiHide.addEventListener('click', () => {
+      hideRomaji = true;
+      localStorage.setItem('hideRomaji', 'true');
+      updateRomajiToggleUI();
+    });
+
     function startQuiz() {
       romajiBuffer = '';
       quizScore = 0;
@@ -1967,7 +2003,7 @@
 
       letterCard.style.setProperty('--glow', color);
       letterUpper.textContent = ch;
-      letterLower.textContent = getLowerDisplay(ch);
+      letterLower.textContent = (hideRomaji && quizMode && isRomajiLang()) ? '' : getLowerDisplay(ch);
 
       letterCard.classList.remove('pop');
       void letterCard.offsetWidth; // reflow to restart animation
@@ -2166,6 +2202,17 @@
       // Update highscores label and list for the new language
       lblHighscores.textContent = lang.highscoresTitle;
       renderHighscoresInWelcome();
+
+      // Show romaji options section only for romaji languages
+      if (isRomajiLang()) {
+        romajiOptionsSection.style.display = 'block';
+        lblRomajiOptions.textContent = lang.chooseRomaji;
+        btnRomajiShow.textContent = lang.romajiShowBtn;
+        btnRomajiHide.textContent = lang.romajiHideBtn;
+        updateRomajiToggleUI();
+      } else {
+        romajiOptionsSection.style.display = 'none';
+      }
     }
 
     document.querySelectorAll('.lang-btn').forEach(btn => {
