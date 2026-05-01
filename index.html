@@ -2003,7 +2003,7 @@
 
       letterCard.style.setProperty('--glow', color);
       letterUpper.textContent = ch;
-      letterLower.textContent = (hideRomaji && isRomajiLang()) ? '' : getLowerDisplay(ch);
+      letterLower.textContent = (hideRomaji && quizMode && isRomajiLang()) ? '' : getLowerDisplay(ch);
 
       letterCard.classList.remove('pop');
       void letterCard.offsetWidth; // reflow to restart animation
