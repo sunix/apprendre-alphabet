@@ -203,24 +203,17 @@
 
     /* ─── Content type toggle ─── */
     #content-toggle {
-      position: fixed;
-      top: .8rem;
-      left: .8rem;
-      z-index: 5;
       display: flex;
       gap: .4rem;
       flex-wrap: wrap;
-      max-width: 50vw;
+      justify-content: center;
     }
 
     /* ─── Mode toggle ─── */
     #mode-toggle {
-      position: fixed;
-      top: .8rem;
-      right: .8rem;
-      z-index: 5;
       display: flex;
       gap: .4rem;
+      justify-content: center;
     }
 
     .mode-btn {
@@ -304,13 +297,10 @@
 
     /* ─── Language selector ─── */
     #lang-toggle {
-      position: fixed;
-      bottom: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 5;
       display: flex;
       gap: .3rem;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .lang-btn {
@@ -326,34 +316,172 @@
       gap: .35rem;
       text-decoration: none;
     }
+
+    /* ─── Welcome screen ─── */
+    #welcome-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: var(--bg);
+      overflow-y: auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+
+    #welcome-screen.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #welcome-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 2.5rem 1.5rem 3rem;
+      max-width: 620px;
+      width: 100%;
+    }
+
+    #welcome-title {
+      font-size: clamp(1.8rem, 6vw, 3rem);
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    #welcome-desc {
+      font-size: clamp(.9rem, 2.5vw, 1.1rem);
+      color: rgba(255,255,255,.65);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .welcome-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .welcome-label {
+      font-size: clamp(.7rem, 2vw, .82rem);
+      color: rgba(255,255,255,.4);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-weight: 700;
+    }
+
+    #welcome-mode-desc {
+      font-size: clamp(.8rem, 2.5vw, .95rem);
+      color: rgba(255,255,255,.45);
+      text-align: center;
+      font-style: italic;
+      min-height: 2.8em;
+      padding: 0 1rem;
+      line-height: 1.5;
+    }
+
+    #start-btn {
+      padding: .85rem 2.5rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 4px 20px rgba(233,69,96,.4);
+    }
+
+    #start-btn:hover  { transform: scale(1.06); box-shadow: 0 6px 24px rgba(233,69,96,.5); }
+    #start-btn:active { transform: scale(.96); }
+
+    /* ─── Back-to-welcome button (shown during game) ─── */
+    #back-btn {
+      position: fixed;
+      top: .8rem;
+      right: .8rem;
+      z-index: 5;
+      display: none;
+    }
+
+    /* ─── "Change settings" button inside celebration ─── */
+    #welcome-btn {
+      margin-top: .5rem;
+      padding: .5rem 1.5rem;
+      font-size: .95rem;
+      font-weight: 700;
+      border: 2px solid rgba(255,255,255,.3);
+      border-radius: 50px;
+      background: transparent;
+      color: rgba(255,255,255,.7);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    #welcome-btn:hover {
+      border-color: rgba(255,255,255,.6);
+      color: #fff;
+    }
   </style>
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
 
-  <div id="lang-toggle">
-    <button class="mode-btn lang-btn active" data-lang="fr" aria-label="Français">🇫🇷</button>
-    <button class="mode-btn lang-btn" data-lang="en" aria-label="English">🇬🇧</button>
-    <button class="mode-btn lang-btn" data-lang="es" aria-label="Español">🇪🇸</button>
-    <button class="mode-btn lang-btn" data-lang="de" aria-label="Deutsch">🇩🇪</button>
-    <button class="mode-btn lang-btn" data-lang="it" aria-label="Italiano">🇮🇹</button>
-    <button class="mode-btn lang-btn" data-lang="ja" aria-label="ひらがな">🇯🇵あ</button>
-    <button class="mode-btn lang-btn" data-lang="kt" aria-label="Katakana (カタカナ)">🇯🇵カ</button>
-    <button class="mode-btn lang-btn" data-lang="ru" aria-label="Русский">🇷🇺</button>
-    <button class="mode-btn lang-btn" data-lang="uk" aria-label="Українська">🇺🇦</button>
+  <!-- ─── Welcome screen ──────────────────────────────────────────── -->
+  <div id="welcome-screen" class="show">
+    <div id="welcome-card">
+      <h1 id="welcome-title">🔤 Apprendre l'Alphabet</h1>
+      <p id="welcome-desc">Apprends les lettres, les chiffres et les syllabes en t'amusant&nbsp;!</p>
+
+      <div class="welcome-section">
+        <div class="welcome-label" id="lbl-lang">Langue</div>
+        <div id="lang-toggle">
+          <button class="mode-btn lang-btn active" data-lang="fr" aria-label="Français">🇫🇷</button>
+          <button class="mode-btn lang-btn" data-lang="en" aria-label="English">🇬🇧</button>
+          <button class="mode-btn lang-btn" data-lang="es" aria-label="Español">🇪🇸</button>
+          <button class="mode-btn lang-btn" data-lang="de" aria-label="Deutsch">🇩🇪</button>
+          <button class="mode-btn lang-btn" data-lang="it" aria-label="Italiano">🇮🇹</button>
+          <button class="mode-btn lang-btn" data-lang="ja" aria-label="ひらがな">🇯🇵あ</button>
+          <button class="mode-btn lang-btn" data-lang="kt" aria-label="Katakana (カタカナ)">🇯🇵カ</button>
+          <button class="mode-btn lang-btn" data-lang="ru" aria-label="Русский">🇷🇺</button>
+          <button class="mode-btn lang-btn" data-lang="uk" aria-label="Українська">🇺🇦</button>
+        </div>
+      </div>
+
+      <div class="welcome-section">
+        <div class="welcome-label" id="lbl-content">Que veux-tu apprendre&nbsp;?</div>
+        <div id="content-toggle">
+          <button class="mode-btn active" id="btn-letters" aria-label="Sélectionner les lettres">🔤 Lettres</button>
+          <button class="mode-btn" id="btn-digits" aria-label="Sélectionner les chiffres">🔢 Chiffres</button>
+          <button class="mode-btn" id="btn-both" aria-label="Sélectionner lettres et chiffres">📚 Les deux</button>
+        </div>
+      </div>
+
+      <div class="welcome-section">
+        <div class="welcome-label" id="lbl-mode">Comment veux-tu jouer&nbsp;?</div>
+        <div id="mode-toggle">
+          <button class="mode-btn active" id="btn-explore">🔍 Exploration</button>
+          <button class="mode-btn" id="btn-quiz">🎯 Devinette</button>
+        </div>
+        <p id="welcome-mode-desc">Appuie sur les touches du clavier pour découvrir les lettres une par une.</p>
+      </div>
+
+      <button id="start-btn">&#9654;&nbsp;Jouer&nbsp;!</button>
+
+      <a id="github-star" class="mode-btn" href="https://github.com/sunix/apprendre-alphabet" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">⭐ <span id="star-count">…</span></a>
+    </div>
   </div>
 
-  <div id="content-toggle">
-    <button class="mode-btn active" id="btn-letters" aria-label="Sélectionner les lettres">🔤 Lettres</button>
-    <button class="mode-btn" id="btn-digits" aria-label="Sélectionner les chiffres">🔢 Chiffres</button>
-    <button class="mode-btn" id="btn-both" aria-label="Sélectionner lettres et chiffres">📚 Les deux</button>
-  </div>
-
-  <div id="mode-toggle">
-    <button class="mode-btn active" id="btn-explore">🔍 Exploration</button>
-    <button class="mode-btn" id="btn-quiz">🎯 Devinette</button>
-    <a id="github-star" class="mode-btn" href="https://github.com/sunix/apprendre-alphabet" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">⭐ <span id="star-count">…</span></a>
-  </div>
+  <!-- ─── Back-to-welcome button (visible during game) ────────────── -->
+  <button id="back-btn" class="mode-btn">⚙️ Options</button>
 
   <div id="stage">
     <div id="letter-card">
@@ -376,6 +504,7 @@
     <h1>🎉 Bravo&nbsp;!</h1>
     <p>Tu as tapé toutes les lettres de l'alphabet&nbsp;!</p>
     <button id="restart-btn">Recommencer</button>
+    <button id="welcome-btn">⚙️ Options</button>
   </div>
 
   <script>
@@ -481,6 +610,15 @@
         quizBtn:     '🎯 Devinette',
         pageTitle:   "Apprendre l'Alphabet",
         htmlLang:    'fr',
+        welcomeTitle:  "🔤 Apprendre l\u2019Alphabet",
+        welcomeDesc:   "Apprends les lettres, les chiffres et les syllabes en t\u2019amusant\u00a0!",
+        chooseLang:    "Langue",
+        chooseContent: "Que veux-tu apprendre\u00a0?",
+        chooseMode:    "Comment veux-tu jouer\u00a0?",
+        exploreDesc:   "Appuie sur les touches du clavier pour d\u00e9couvrir les lettres une par une.",
+        quizDesc:      "Trouve la lettre affich\u00e9e avant que le temps soit \u00e9coul\u00e9\u00a0!",
+        startBtn:      "\u25b6\u00a0Jouer\u00a0!",
+        backBtn:       "\u2699\ufe0f\u00a0Options",
       },
       en: {
         speechCode: 'en-GB',
@@ -520,6 +658,15 @@
         quizBtn:     '🎯 Quiz',
         pageTitle:   'Learn the Alphabet',
         htmlLang:    'en',
+        welcomeTitle:  '🔤 Learn the Alphabet',
+        welcomeDesc:   'Discover letters, digits and more in a fun way!',
+        chooseLang:    'Language',
+        chooseContent: 'What do you want to learn?',
+        chooseMode:    'How do you want to play?',
+        exploreDesc:   'Press keys on your keyboard to discover characters one by one.',
+        quizDesc:      'Find the displayed character before the timer runs out!',
+        startBtn:      '\u25b6\u00a0Play!',
+        backBtn:       '\u2699\ufe0f\u00a0Settings',
       },
       es: {
         speechCode: 'es-ES',
@@ -559,6 +706,15 @@
         quizBtn:     '🎯 Adivinar',
         pageTitle:   'Aprender el Alfabeto',
         htmlLang:    'es',
+        welcomeTitle:  '🔤 Aprender el Alfabeto',
+        welcomeDesc:   '\u00a1Aprende letras, n\u00fameros y s\u00edlabas de forma divertida!',
+        chooseLang:    'Idioma',
+        chooseContent: '\u00bfQu\u00e9 quieres aprender?',
+        chooseMode:    '\u00bfC\u00f3mo quieres jugar?',
+        exploreDesc:   'Pulsa teclas en el teclado para descubrir los caracteres uno a uno.',
+        quizDesc:      '\u00a1Encuentra el car\u00e1cter mostrado antes de que se acabe el tiempo!',
+        startBtn:      '\u25b6\u00a0\u00a1Jugar!',
+        backBtn:       '\u2699\ufe0f\u00a0Opciones',
       },
       de: {
         speechCode: 'de-DE',
@@ -598,6 +754,15 @@
         quizBtn:     '🎯 Quiz',
         pageTitle:   'Das Alphabet lernen',
         htmlLang:    'de',
+        welcomeTitle:  '🔤 Das Alphabet lernen',
+        welcomeDesc:   'Lerne Buchstaben, Ziffern und Silben auf spielerische Weise!',
+        chooseLang:    'Sprache',
+        chooseContent: 'Was m\u00f6chtest du lernen?',
+        chooseMode:    'Wie m\u00f6chtest du spielen?',
+        exploreDesc:   'Dr\u00fccke Tasten auf der Tastatur, um Zeichen einzeln zu entdecken.',
+        quizDesc:      'Finde das angezeigte Zeichen, bevor die Zeit abl\u00e4uft!',
+        startBtn:      '\u25b6\u00a0Spielen!',
+        backBtn:       '\u2699\ufe0f\u00a0Einstellungen',
       },
       it: {
         speechCode: 'it-IT',
@@ -637,6 +802,15 @@
         quizBtn:     '🎯 Indovina',
         pageTitle:   "Imparare l'Alfabeto",
         htmlLang:    'it',
+        welcomeTitle:  "🔤 Imparare l\u2019Alfabeto",
+        welcomeDesc:   'Scopri lettere, cifre e sillabe in modo divertente!',
+        chooseLang:    'Lingua',
+        chooseContent: 'Cosa vuoi imparare?',
+        chooseMode:    'Come vuoi giocare?',
+        exploreDesc:   'Premi i tasti della tastiera per scoprire i caratteri uno alla volta.',
+        quizDesc:      'Trova il carattere mostrato prima che scada il tempo!',
+        startBtn:      '\u25b6\u00a0Giocare!',
+        backBtn:       '\u2699\ufe0f\u00a0Opzioni',
       },
       ja: {
         speechCode: 'ja-JP',
@@ -676,6 +850,15 @@
         quizBtn:     '\ud83c\udfaf \u30af\u30a4\u30ba',
         pageTitle:   '\u3072\u3089\u304c\u306a\u3092\u304a\u307c\u3048\u3088\u3046',
         htmlLang:    'ja',
+        welcomeTitle:  '🔤 \u3072\u3089\u304c\u306a\u3092\u304a\u307c\u3048\u3088\u3046',
+        welcomeDesc:   '\u3072\u3089\u304c\u306a\u3001\u30ab\u30bf\u30ab\u30ca\u3001\u6570\u5b57\u3092\u305f\u306e\u3057\u304f\u5b66\u307c\u3046\uff01',
+        chooseLang:    '\u8a00\u8a9e',
+        chooseContent: '\u306a\u306b\u3092\u5b66\u3076\uff1f',
+        chooseMode:    '\u3069\u3046\u3084\u3063\u3066\u9077\u3076\uff1f',
+        exploreDesc:   '\u30ad\u30fc\u30dc\u30fc\u30c9\u3067\u30ed\u30fc\u30de\u5b57\u3092\u5165\u529b\u3057\u3066\u3001\u6587\u5b57\u3092\u4e00\u3064\u305a\u3064\u767a\u898b\u3057\u3088\u3046\uff01',
+        quizDesc:      '\u30bf\u30a4\u30e0\u30a2\u30c3\u30d7\u306b\u306a\u308b\u524d\u306b\u3001\u8868\u793a\u3055\u308c\u305f\u6587\u5b57\u3092\u898b\u3064\u3051\u3088\u3046\uff01',
+        startBtn:      '\u25b6 \u3042\u305d\u3076\uff01',
+        backBtn:       '\u2699\ufe0f \u305b\u3063\u3066\u3044',
       },
       kt: {
         speechCode: 'ja-JP',
@@ -715,6 +898,15 @@
         quizBtn:     '\ud83c\udfaf \u30af\u30a4\u30ba',
         pageTitle:   '\u30ab\u30bf\u30ab\u30ca\u3092\u304a\u307c\u3048\u3088\u3046',
         htmlLang:    'ja',
+        welcomeTitle:  '🔤 \u30ab\u30bf\u30ab\u30ca\u3092\u304a\u307c\u3048\u3088\u3046',
+        welcomeDesc:   '\u30ab\u30bf\u30ab\u30ca\u3001\u3072\u3089\u304c\u306a\u3001\u6570\u5b57\u3092\u305f\u306e\u3057\u304f\u5b66\u307c\u3046\uff01',
+        chooseLang:    '\u8a00\u8a9e',
+        chooseContent: '\u306a\u306b\u3092\u5b66\u3076\uff1f',
+        chooseMode:    '\u3069\u3046\u3084\u3063\u3066\u9077\u3076\uff1f',
+        exploreDesc:   '\u30ad\u30fc\u30dc\u30fc\u30c9\u3067\u30ed\u30fc\u30de\u5b57\u3092\u5165\u529b\u3057\u3066\u3001\u6587\u5b57\u3092\u4e00\u3064\u305a\u3064\u767a\u898b\u3057\u3088\u3046\uff01',
+        quizDesc:      '\u30bf\u30a4\u30e0\u30a2\u30c3\u30d7\u306b\u306a\u308b\u524d\u306b\u3001\u8868\u793a\u3055\u308c\u305f\u6587\u5b57\u3092\u898b\u3064\u3051\u3088\u3046\uff01',
+        startBtn:      '\u25b6 \u3042\u305d\u3076\uff01',
+        backBtn:       '\u2699\ufe0f \u305b\u3063\u3066\u3044',
       },
       ru: {
         speechCode: 'ru-RU',
@@ -754,6 +946,15 @@
         quizBtn:     '\ud83c\udfaf \u0412\u0438\u043a\u0442\u043e\u0440\u0438\u043d\u0430',
         pageTitle:   '\u0423\u0447\u0438\u043c \u0430\u043b\u0444\u0430\u0432\u0438\u0442',
         htmlLang:    'ru',
+        welcomeTitle:  '🔤 \u0423\u0447\u0438\u043c \u0430\u043b\u0444\u0430\u0432\u0438\u0442',
+        welcomeDesc:   '\u0418\u0437\u0443\u0447\u0430\u0439 \u0431\u0443\u043a\u0432\u044b, \u0446\u0438\u0444\u0440\u044b \u0438 \u0441\u043b\u043e\u0433\u0438 \u0432 \u0438\u0433\u0440\u043e\u0432\u043e\u0439 \u0444\u043e\u0440\u043c\u0435!',
+        chooseLang:    '\u042f\u0437\u044b\u043a',
+        chooseContent: '\u0427\u0442\u043e \u0445\u043e\u0447\u0435\u0448\u044c \u0443\u0447\u0438\u0442\u044c?',
+        chooseMode:    '\u041a\u0430\u043a \u0445\u043e\u0447\u0435\u0448\u044c \u0438\u0433\u0440\u0430\u0442\u044c?',
+        exploreDesc:   '\u041d\u0430\u0436\u0438\u043c\u0430\u0439 \u043a\u043b\u0430\u0432\u0438\u0448\u0438 \u043d\u0430 \u043a\u043b\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u0435, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043a\u0440\u044b\u0432\u0430\u0442\u044c \u0441\u0438\u043c\u0432\u043e\u043b\u044b \u043f\u043e \u043e\u0434\u043d\u043e\u043c\u0443.',
+        quizDesc:      '\u041d\u0430\u0439\u0434\u0438 \u043f\u043e\u043a\u0430\u0437\u0430\u043d\u043d\u044b\u0439 \u0441\u0438\u043c\u0432\u043e\u043b \u0434\u043e \u0438\u0441\u0442\u0435\u0447\u0435\u043d\u0438\u044f \u0432\u0440\u0435\u043c\u0435\u043d\u0438!',
+        startBtn:      '\u25b6\u00a0\u0418\u0433\u0440\u0430\u0442\u044c!',
+        backBtn:       '\u2699\ufe0f\u00a0\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438',
       },
       uk: {
         speechCode: 'uk-UA',
@@ -793,6 +994,15 @@
         quizBtn:     '\ud83c\udfaf \u0412\u0456\u043a\u0442\u043e\u0440\u0438\u043d\u0430',
         pageTitle:   '\u0412\u0447\u0438\u043c\u043e \u0430\u043b\u0444\u0430\u0432\u0456\u0442',
         htmlLang:    'uk',
+        welcomeTitle:  '🔤 \u0412\u0447\u0438\u043c\u043e \u0430\u043b\u0444\u0430\u0432\u0456\u0442',
+        welcomeDesc:   '\u0412\u0438\u0432\u0447\u0430\u0439 \u0431\u0443\u043a\u0432\u0438, \u0446\u0438\u0444\u0440\u0438 \u0442\u0430 \u0441\u043a\u043b\u0430\u0434\u0438 \u0437 \u0440\u0430\u0434\u0456\u0441\u0442\u044e!',
+        chooseLang:    '\u041c\u043e\u0432\u0430',
+        chooseContent: '\u0429\u043e \u0445\u043e\u0447\u0435\u0448 \u0432\u0447\u0438\u0442\u0438?',
+        chooseMode:    '\u042f\u043a \u0445\u043e\u0447\u0435\u0448 \u0433\u0440\u0430\u0442\u0438?',
+        exploreDesc:   '\u041d\u0430\u0442\u0438\u0441\u043a\u0430\u0439 \u043a\u043b\u0430\u0432\u0456\u0448\u0456 \u043d\u0430 \u043a\u043b\u0430\u0432\u0456\u0430\u0442\u0443\u0440\u0456, \u0449\u043e\u0431 \u0432\u0456\u0434\u043a\u0440\u0438\u0432\u0430\u0442\u0438 \u0441\u0438\u043c\u0432\u043e\u043b\u0438 \u043e\u0434\u0438\u043d \u0437\u0430 \u043e\u0434\u043d\u0438\u043c.',
+        quizDesc:      '\u0417\u043d\u0430\u0439\u0434\u0438 \u043f\u043e\u043a\u0430\u0437\u0430\u043d\u0438\u0439 \u0441\u0438\u043c\u0432\u043e\u043b \u0434\u043e \u0437\u0430\u043a\u0456\u043d\u0447\u0435\u043d\u043d\u044f \u0447\u0430\u0441\u0443!',
+        startBtn:      '\u25b6\u00a0\u0413\u0440\u0430\u0442\u0438!',
+        backBtn:       '\u2699\ufe0f\u00a0\u041d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u043d\u043d\u044f',
       },
     };
 
@@ -897,6 +1107,7 @@
     const DIGITS   = '0123456789';
 
     let contentType = 'letters'; // 'letters' | 'digits' | 'both'
+    let gameActive  = false;     // true once the user presses Start
 
     function getCharset() {
       const alpha = getLang().alphabet.split('');
@@ -938,6 +1149,16 @@
     const quizTimerLabel = document.getElementById('quiz-timer-label');
     const quizScoreEl    = document.getElementById('quiz-score');
     const quizInfoEl     = document.getElementById('quiz-info');
+    const welcomeScreen  = document.getElementById('welcome-screen');
+    const welcomeTitleEl = document.getElementById('welcome-title');
+    const welcomeDescEl  = document.getElementById('welcome-desc');
+    const welcomeModDesc = document.getElementById('welcome-mode-desc');
+    const lblLang        = document.getElementById('lbl-lang');
+    const lblContent     = document.getElementById('lbl-content');
+    const lblMode        = document.getElementById('lbl-mode');
+    const startBtnEl     = document.getElementById('start-btn');
+    const backBtnEl      = document.getElementById('back-btn');
+    const welcomeBtnEl   = document.getElementById('welcome-btn');
 
     // ─── Build character dots ────────────────────────────────────────────────
     function buildDots() {
@@ -1115,6 +1336,9 @@
       // Resume audio context (required by browser autoplay policy)
       if (audioCtx.state === 'suspended') audioCtx.resume();
 
+      // Ignore key events when the welcome screen is visible
+      if (!gameActive) return;
+
       // Romaji input for Hiragana and Katakana languages
       if ((currentLangKey === 'ja' || currentLangKey === 'kt') && /^[a-zA-Z]$/.test(e.key)) {
         const kana = feedRomaji(e.key);
@@ -1178,14 +1402,14 @@
         quizMode = true;
         btnExplore.classList.remove('active');
         btnQuiz.classList.add('active');
-        startQuiz();
+        if (gameActive) startQuiz();
       } else {
         quizMode = false;
         btnExplore.classList.add('active');
         btnQuiz.classList.remove('active');
-        stopQuiz();
-        restart();
+        if (gameActive) { stopQuiz(); restart(); }
       }
+      updateWelcomeModeDesc();
     }
 
     btnExplore.addEventListener('click', () => setMode('explore'));
@@ -1386,12 +1610,14 @@
       btnLetters.classList.toggle('active', type === 'letters');
       btnDigits.classList.toggle('active', type === 'digits');
       btnBoth.classList.toggle('active', type === 'both');
-      buildDots();
-      if (quizMode) {
-        stopQuiz();
-        startQuiz();
-      } else {
-        restart();
+      if (gameActive) {
+        buildDots();
+        if (quizMode) {
+          stopQuiz();
+          startQuiz();
+        } else {
+          restart();
+        }
       }
     }
 
@@ -1408,6 +1634,17 @@
       // Update document language and title
       document.documentElement.lang = lang.htmlLang;
       document.title = lang.pageTitle;
+
+      // Update welcome-screen labels
+      welcomeTitleEl.textContent = lang.welcomeTitle;
+      welcomeDescEl.textContent  = lang.welcomeDesc;
+      lblLang.textContent        = lang.chooseLang;
+      lblContent.textContent     = lang.chooseContent;
+      lblMode.textContent        = lang.chooseMode;
+      startBtnEl.textContent     = lang.startBtn;
+      backBtnEl.textContent      = lang.backBtn;
+      welcomeBtnEl.textContent   = lang.backBtn;
+      updateWelcomeModeDesc();
 
       // Update content-toggle button labels
       btnLetters.textContent = lang.lettersBtn;
@@ -1430,19 +1667,48 @@
         btn.classList.toggle('active', btn.dataset.lang === key);
       });
 
-      // Rebuild dots for new alphabet and restart current mode
-      buildDots();
-      if (quizMode) {
-        stopQuiz();
-        startQuiz();
-      } else {
-        restart();
+      // Rebuild dots for new alphabet and restart current mode (only if game active)
+      if (gameActive) {
+        buildDots();
+        if (quizMode) {
+          stopQuiz();
+          startQuiz();
+        } else {
+          restart();
+        }
       }
     }
 
     document.querySelectorAll('.lang-btn').forEach(btn => {
       btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
     });
+
+    // ─── Welcome-screen helpers ──────────────────────────────────────────────
+    function updateWelcomeModeDesc() {
+      const lang = getLang();
+      welcomeModDesc.textContent = quizMode ? lang.quizDesc : lang.exploreDesc;
+    }
+
+    function showWelcome() {
+      gameActive = false;
+      stopQuiz();
+      celebration.classList.remove('show');
+      confettiPieces = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      welcomeScreen.classList.add('show');
+      backBtnEl.style.display = 'none';
+    }
+
+    startBtnEl.addEventListener('click', () => {
+      gameActive = true;
+      welcomeScreen.classList.remove('show');
+      backBtnEl.style.display = 'inline-block';
+      buildDots();
+      if (quizMode) startQuiz(); else restart();
+    });
+
+    backBtnEl.addEventListener('click', showWelcome);
+    welcomeBtnEl.addEventListener('click', showWelcome);
 
     // ─── Init ────────────────────────────────────────────────────────────────
     setLanguage(currentLangKey);
