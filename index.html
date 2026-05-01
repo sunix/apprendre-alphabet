@@ -295,6 +295,22 @@
       transform: scale(.92);
     }
 
+    /* ─── Hidden input for mobile virtual keyboard (romaji languages) ─── */
+    #mobile-romaji-input {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      border: none;
+      padding: 0;
+      margin: 0;
+      outline: none;
+      pointer-events: none;
+    }
+
     /* ─── Language selector ─── */
     #lang-toggle {
       display: flex;
@@ -616,6 +632,11 @@
       <div id="alphabet-row"></div>
     </div>
   </div>
+
+  <!-- ─── Hidden input to trigger the mobile virtual keyboard (romaji languages) ─── -->
+  <input id="mobile-romaji-input" type="text" inputmode="text"
+         autocomplete="off" autocorrect="off" autocapitalize="none"
+         spellcheck="false" aria-hidden="true" tabindex="-1" />
 
   <div id="celebration">
     <h1>🎉 Bravo&nbsp;!</h1>
@@ -1206,6 +1227,7 @@
     //   n + vowel   → na-row syllable (na, ni, nu, ne, no)
     //   n + consonant → emit ん/ン, start a new buffer with that consonant
     const VOWELS = 'aeiou';
+    const LATIN_LETTER_RE = /^[a-zA-Z]$/; // matches a single romaji letter
     let romajiBuffer = '';
 
     function getRomajiMap() {
@@ -1341,6 +1363,7 @@
     const backBtnEl      = document.getElementById('back-btn');
     const welcomeBtnEl   = document.getElementById('welcome-btn');
     const lblHighscores  = document.getElementById('lbl-highscores');
+    const mobileRomajiInput = document.getElementById('mobile-romaji-input');
 
     // ─── Highscore helpers ───────────────────────────────────────────────────
     function getHighscoreKey() {
@@ -1733,6 +1756,60 @@
       });
     }
 
+    // ─── Mobile romaji keyboard helpers ─────────────────────────────────────
+    // On mobile devices there is no physical keyboard. For romaji languages
+    // (Hiragana and Katakana) we focus a hidden <input> element so the OS
+    // shows its virtual keyboard.  The `input` event on that element routes
+    // typed Latin characters through feedRomaji(), exactly as the keydown
+    // handler does on desktop.
+
+    function isRomajiLang() {
+      return currentLangKey === 'ja' || currentLangKey === 'kt';
+    }
+
+    function focusMobileRomajiInput() {
+      if (isRomajiLang()) mobileRomajiInput.focus();
+    }
+
+    mobileRomajiInput.addEventListener('input', e => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      // Ignore events that are part of an IME composition sequence (e.g. a
+      // Japanese keyboard composing kana from romaji itself).  The
+      // compositionend listener below discards those characters so they don't
+      // end up in the input's value.
+      if (e.isComposing) return;
+      // e.data is the inserted string; it can be null for deletions or other
+      // non-insertion input types, so we fall back to an empty string.
+      const chars = e.data || '';
+      mobileRomajiInput.value = ''; // keep the hidden input empty
+      if (!gameActive) return;
+      if (celebration.classList.contains('show')) return;
+      for (const char of chars) {
+        if (!LATIN_LETTER_RE.test(char)) continue;
+        const kana = feedRomaji(char);
+        if (!kana) continue; // still accumulating the romaji sequence
+        const charset = getCharset();
+        if (!charset.includes(kana)) continue;
+        if (quizMode) {
+          handleQuizKey(kana);
+        } else {
+          if (typed.size === 0) exploreStartTime = Date.now();
+          showLetter(kana);
+          typed.add(kana);
+          updateProgress();
+          if (typed.size === charset.length) {
+            const elapsedMs = exploreStartTime ? Date.now() - exploreStartTime : 0;
+            setTimeout(() => showCelebration(elapsedMs), 400);
+          }
+        }
+      }
+    });
+
+    // Discard any text that an IME may have committed into the hidden input.
+    mobileRomajiInput.addEventListener('compositionend', () => {
+      mobileRomajiInput.value = '';
+    });
+
     // ─── Keyboard handler ────────────────────────────────────────────────────
     document.addEventListener('keydown', e => {
       // Resume audio context (required by browser autoplay policy)
@@ -1743,7 +1820,10 @@
       if (celebration.classList.contains('show')) return;
 
       // Romaji input for Hiragana and Katakana languages
-      if ((currentLangKey === 'ja' || currentLangKey === 'kt') && /^[a-zA-Z]$/.test(e.key)) {
+      // When the hidden mobile input is focused the `input` event already
+      // handles these characters — skip here to avoid double-processing.
+      if (isRomajiLang() && LATIN_LETTER_RE.test(e.key)) {
+        if (document.activeElement === mobileRomajiInput) return;
         const kana = feedRomaji(e.key);
         if (!kana) return; // still accumulating the romaji sequence
         const charset = getCharset();
@@ -1781,6 +1861,12 @@
         const elapsedMs = exploreStartTime ? Date.now() - exploreStartTime : 0;
         setTimeout(() => showCelebration(elapsedMs), 400);
       }
+    });
+
+    // Tapping anywhere in the stage re-opens the virtual keyboard on mobile
+    // (in case it was dismissed) for romaji languages.
+    document.getElementById('stage').addEventListener('click', () => {
+      if (gameActive && isRomajiLang()) focusMobileRomajiInput();
     });
 
     // ─── Quiz mode ───────────────────────────────────────────────────────────
@@ -1998,6 +2084,7 @@
         restart();
         startMusic('explore');
       }
+      focusMobileRomajiInput();
     });
 
     // ─── Content type toggle ────────────────────────────────────────────────
@@ -2073,6 +2160,7 @@
         } else {
           restart();
         }
+        focusMobileRomajiInput();
       }
 
       // Update highscores label and list for the new language
@@ -2098,6 +2186,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       welcomeScreen.classList.add('show');
       backBtnEl.style.display = 'none';
+      mobileRomajiInput.blur();
       renderHighscoresInWelcome();
       startMusic('welcome');
     }
@@ -2109,6 +2198,7 @@
       exploreStartTime = null;
       buildDots();
       if (quizMode) { startQuiz(); startMusic('quiz'); } else { restart(); startMusic('explore'); }
+      focusMobileRomajiInput();
     });
 
     backBtnEl.addEventListener('click', showWelcome);
