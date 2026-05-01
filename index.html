@@ -4,20 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Apprendre l'Alphabet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     /* ─── Reset & base ─── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #1a1a2e;
-      --card: #16213e;
-      --accent: #e94560;
+      --bg: #000810;
+      --card: #0a0a1a;
+      --accent: #ffd700;
+      --accent2: #00e5ff;
+      --accent3: #ff3a20;
       --letter-size: min(50vw, 50vh);
-      --radius: 24px;
+      --radius: 0px;
+      --pixel: 4px;
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Press Start 2P', monospace;
       background: var(--bg);
       color: #fff;
       height: 100dvh;
@@ -27,6 +31,22 @@
       justify-content: center;
       overflow: hidden;
       user-select: none;
+    }
+
+    /* ─── CRT scanline overlay ─── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.12) 2px,
+        rgba(0,0,0,.12) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
     }
 
     /* ─── Confetti canvas (behind everything) ─── */
@@ -64,8 +84,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 0 4px var(--glow, transparent),
-                  0 20px 60px rgba(0,0,0,.5);
+      border: var(--pixel) solid #fff;
+      box-shadow: 8px 8px 0 #000,
+                  0 0 0 var(--pixel) var(--glow, transparent),
+                  inset -4px -4px 0 rgba(0,0,0,.5),
+                  inset 4px 4px 0 rgba(255,255,255,.1);
       transition: box-shadow .3s, transform .1s;
     }
 
@@ -99,11 +122,12 @@
 
     /* ─── Hint text ─── */
     #hint {
-      font-size: clamp(1rem, 3vw, 1.4rem);
-      color: rgba(255,255,255,.5);
+      font-size: clamp(.6rem, 2vw, .85rem);
+      color: var(--accent2);
       text-align: center;
       letter-spacing: .05em;
       transition: opacity .4s;
+      text-shadow: 0 0 8px var(--accent2);
     }
 
     #hint.hidden { opacity: 0; }
@@ -126,26 +150,29 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     .alpha-dot {
-      width: clamp(22px, 4vw, 34px);
-      height: clamp(22px, 4vw, 34px);
-      border-radius: 6px;
-      background: rgba(255,255,255,.08);
+      width: clamp(20px, 3.5vw, 30px);
+      height: clamp(20px, 3.5vw, 30px);
+      border-radius: 0;
+      background: rgba(255,255,255,.05);
+      border: 2px solid rgba(255,255,255,.15);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(.6rem, 2vw, .85rem);
+      font-size: clamp(.45rem, 1.5vw, .65rem);
       font-weight: 700;
-      color: rgba(255,255,255,.25);
+      color: rgba(255,255,255,.2);
       transition: background .3s, color .3s, transform .2s;
     }
 
     .alpha-dot.done {
-      color: #fff;
+      color: #000;
+      border-color: transparent;
       transform: scale(1.05);
+      box-shadow: 2px 2px 0 rgba(0,0,0,.5);
     }
 
     /* ─── Celebration banner ─── */
@@ -170,31 +197,35 @@
     }
 
     #celebration h1 {
-      font-size: clamp(2.5rem, 10vw, 5rem);
+      font-size: clamp(1.5rem, 8vw, 3rem);
       animation: bounce 1s infinite alternate;
+      text-shadow: 4px 4px 0 var(--accent), 8px 8px 0 rgba(0,0,0,.5);
+      color: var(--accent);
     }
 
     #celebration p {
       margin-top: 1rem;
-      font-size: clamp(1rem, 4vw, 1.8rem);
+      font-size: clamp(.6rem, 2.5vw, 1rem);
       color: rgba(255,255,255,.7);
     }
 
     #restart-btn {
       margin-top: 2rem;
       padding: .75rem 2rem;
-      font-size: 1.2rem;
+      font-size: .85rem;
+      font-family: 'Press Start 2P', monospace;
       font-weight: 700;
-      border: none;
-      border-radius: 50px;
+      border: var(--pixel) solid #fff;
+      border-radius: 0;
       background: var(--accent);
-      color: #fff;
+      color: #000;
       cursor: pointer;
-      transition: transform .15s;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 6px 6px 0 #000;
     }
 
-    #restart-btn:hover { transform: scale(1.06); }
-    #restart-btn:active { transform: scale(.96); }
+    #restart-btn:hover { transform: translate(-2px,-2px); box-shadow: 8px 8px 0 #000; }
+    #restart-btn:active { transform: translate(4px,4px); box-shadow: 2px 2px 0 #000; }
 
     @keyframes bounce {
       from { transform: translateY(0); }
@@ -217,26 +248,36 @@
     }
 
     .mode-btn {
-      padding: .4rem .9rem;
-      font-size: .8rem;
+      padding: .45rem .9rem;
+      font-size: .6rem;
+      font-family: 'Press Start 2P', monospace;
       font-weight: 700;
-      border: 2px solid rgba(255,255,255,.2);
-      border-radius: 50px;
+      border: 3px solid rgba(255,255,255,.4);
+      border-radius: 0;
       background: transparent;
-      color: rgba(255,255,255,.45);
+      color: rgba(255,255,255,.5);
       cursor: pointer;
-      transition: all .2s;
+      transition: transform .1s, box-shadow .1s, background .15s;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.7);
     }
 
     .mode-btn.active {
       background: var(--accent);
       border-color: var(--accent);
-      color: #fff;
+      color: #000;
+      box-shadow: 2px 2px 0 rgba(0,0,0,.7);
     }
 
     .mode-btn:hover:not(.active) {
-      border-color: rgba(255,255,255,.45);
-      color: rgba(255,255,255,.7);
+      border-color: rgba(255,255,255,.7);
+      color: rgba(255,255,255,.9);
+      transform: translate(-2px,-2px);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.7);
+    }
+
+    .mode-btn:active {
+      transform: translate(4px,4px);
+      box-shadow: 0 0 0 rgba(0,0,0,.7);
     }
 
     /* ─── Quiz timer bar ─── */
@@ -244,9 +285,10 @@
       width: var(--letter-size);
       min-width: 180px;
       max-width: 340px;
-      height: 10px;
+      height: 12px;
       background: rgba(255,255,255,.1);
-      border-radius: 5px;
+      border-radius: 0;
+      border: 2px solid rgba(255,255,255,.3);
       overflow: hidden;
       display: none;
     }
@@ -254,8 +296,8 @@
     #quiz-timer-bar {
       height: 100%;
       width: 100%;
-      background: #06d6a0;
-      border-radius: 5px;
+      background: #00e676;
+      border-radius: 0;
       transition: background .5s;
     }
 
@@ -263,9 +305,10 @@
     #quiz-info {
       display: none;
       gap: 1.5rem;
-      font-size: clamp(.9rem, 2.5vw, 1.1rem);
+      font-size: clamp(.6rem, 2vw, .8rem);
       font-weight: 700;
-      color: rgba(255,255,255,.75);
+      color: var(--accent);
+      text-shadow: 2px 2px 0 rgba(0,0,0,.5);
     }
 
     /* ─── Shake (wrong answer) ─── */
@@ -374,22 +417,24 @@
       flex-direction: column;
       align-items: center;
       gap: 1.5rem;
-      padding: 2.5rem 1.5rem 3rem;
+      padding: 2rem 1.5rem 2.5rem;
       max-width: 620px;
       width: 100%;
     }
 
     #welcome-title {
-      font-size: clamp(1.8rem, 6vw, 3rem);
+      font-size: clamp(1rem, 4vw, 1.8rem);
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.6;
+      color: var(--accent);
+      text-shadow: 3px 3px 0 rgba(0,0,0,.7);
     }
 
     #welcome-desc {
-      font-size: clamp(.9rem, 2.5vw, 1.1rem);
-      color: rgba(255,255,255,.65);
+      font-size: clamp(.55rem, 1.8vw, .75rem);
+      color: rgba(255,255,255,.6);
       text-align: center;
-      line-height: 1.6;
+      line-height: 2;
     }
 
     .welcome-section {
@@ -397,42 +442,50 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: .6rem;
+      gap: .7rem;
+      position: relative;
     }
 
     .welcome-label {
-      font-size: clamp(.7rem, 2vw, .82rem);
-      color: rgba(255,255,255,.4);
+      font-size: clamp(.55rem, 1.5vw, .65rem);
+      color: var(--accent2);
       text-transform: uppercase;
-      letter-spacing: .1em;
+      letter-spacing: .15em;
       font-weight: 700;
+      text-shadow: 0 0 6px var(--accent2);
     }
 
     #welcome-mode-desc {
-      font-size: clamp(.8rem, 2.5vw, .95rem);
+      font-size: clamp(.5rem, 1.8vw, .7rem);
       color: rgba(255,255,255,.45);
       text-align: center;
-      font-style: italic;
-      min-height: 2.8em;
+      min-height: 3em;
       padding: 0 1rem;
-      line-height: 1.5;
+      line-height: 2;
     }
 
     #start-btn {
-      padding: .85rem 2.5rem;
-      font-size: 1.3rem;
+      padding: 1rem 2.5rem;
+      font-size: .9rem;
+      font-family: 'Press Start 2P', monospace;
       font-weight: 700;
-      border: none;
-      border-radius: 50px;
+      border: var(--pixel) solid #fff;
+      border-radius: 0;
       background: var(--accent);
-      color: #fff;
+      color: #000;
       cursor: pointer;
-      transition: transform .15s, box-shadow .15s;
-      box-shadow: 0 4px 20px rgba(233,69,96,.4);
+      transition: transform .1s, box-shadow .1s;
+      box-shadow: 6px 6px 0 #000;
+      animation: pulse-start 1.2s ease-in-out infinite;
     }
 
-    #start-btn:hover  { transform: scale(1.06); box-shadow: 0 6px 24px rgba(233,69,96,.5); }
-    #start-btn:active { transform: scale(.96); }
+    @keyframes pulse-start {
+      0%, 100% { box-shadow: 6px 6px 0 #000; }
+      50% { box-shadow: 6px 6px 0 var(--accent2); }
+    }
+
+    #start-btn:hover  { transform: translate(-2px,-2px); box-shadow: 8px 8px 0 #000; animation: none; }
+    #start-btn:active { transform: translate(4px,4px); box-shadow: 2px 2px 0 #000; }
 
     /* ─── Back-to-welcome button (shown during game) ─── */
     #back-btn {
@@ -441,25 +494,30 @@
       left: .8rem;
       z-index: 5;
       display: none;
+      font-size: .55rem;
     }
 
     /* ─── "Change settings" button inside celebration ─── */
     #welcome-btn {
       margin-top: .5rem;
       padding: .5rem 1.5rem;
-      font-size: .95rem;
+      font-size: .65rem;
+      font-family: 'Press Start 2P', monospace;
       font-weight: 700;
-      border: 2px solid rgba(255,255,255,.3);
-      border-radius: 50px;
+      border: 3px solid rgba(255,255,255,.4);
+      border-radius: 0;
       background: transparent;
       color: rgba(255,255,255,.7);
       cursor: pointer;
-      transition: all .2s;
+      transition: transform .1s, box-shadow .1s;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.7);
     }
 
     #welcome-btn:hover {
-      border-color: rgba(255,255,255,.6);
+      border-color: rgba(255,255,255,.7);
       color: #fff;
+      transform: translate(-2px,-2px);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.7);
     }
 
     /* ─── Highscores list ─── */
@@ -475,25 +533,25 @@
       align-items: center;
       gap: .6rem;
       padding: .3rem .7rem;
-      border-radius: 8px;
-      background: rgba(255,255,255,.05);
-      font-size: .85rem;
+      border-radius: 0;
+      border: 2px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+      font-size: .6rem;
     }
 
-    .hs-row.hs-gold   { background: rgba(255,215,0,.15); }
-    .hs-row.hs-silver { background: rgba(192,192,192,.1); }
-    .hs-row.hs-bronze { background: rgba(205,127,50,.1); }
+    .hs-row.hs-gold   { background: rgba(255,215,0,.12); border-color: rgba(255,215,0,.3); }
+    .hs-row.hs-silver { background: rgba(192,192,192,.08); border-color: rgba(192,192,192,.2); }
+    .hs-row.hs-bronze { background: rgba(205,127,50,.08); border-color: rgba(205,127,50,.2); }
 
     .hs-rank  { min-width: 2rem; text-align: center; }
     .hs-name  { flex: 1; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .hs-score { font-weight: 700; color: var(--accent); }
 
     .hs-empty {
-      font-size: .85rem;
-      color: rgba(255,255,255,.4);
-      font-style: italic;
+      font-size: .6rem;
+      color: rgba(255,255,255,.35);
       text-align: center;
-      padding: .4rem 0;
+      padding: .6rem 0;
     }
 
     #highscores-list {
@@ -511,9 +569,10 @@
     }
 
     #highscore-new-msg {
-      font-size: 1.05rem;
+      font-size: .75rem;
       font-weight: 700;
-      color: #ffd166;
+      color: var(--accent);
+      text-shadow: 2px 2px 0 rgba(0,0,0,.5);
     }
 
     #highscore-input-row {
@@ -524,35 +583,124 @@
 
     #highscore-name-input {
       padding: .4rem .85rem;
-      font-size: 1rem;
-      border-radius: 50px;
-      border: 2px solid rgba(255,255,255,.3);
-      background: rgba(255,255,255,.1);
+      font-size: .7rem;
+      font-family: 'Press Start 2P', monospace;
+      border-radius: 0;
+      border: 3px solid rgba(255,255,255,.4);
+      background: rgba(255,255,255,.08);
       color: #fff;
       outline: none;
       width: 150px;
     }
 
-    #highscore-name-input::placeholder { color: rgba(255,255,255,.4); }
+    #highscore-name-input::placeholder { color: rgba(255,255,255,.35); }
 
     #highscore-save-btn {
       padding: .4rem 1rem;
-      font-size: .9rem;
+      font-size: .65rem;
+      font-family: 'Press Start 2P', monospace;
       font-weight: 700;
-      border: none;
-      border-radius: 50px;
+      border: 3px solid #fff;
+      border-radius: 0;
       background: var(--accent);
-      color: #fff;
+      color: #000;
       cursor: pointer;
-      transition: transform .15s;
+      transition: transform .1s, box-shadow .1s;
+      box-shadow: 4px 4px 0 #000;
     }
 
-    #highscore-save-btn:hover  { transform: scale(1.06); }
-    #highscore-save-btn:active { transform: scale(.96); }
+    #highscore-save-btn:hover  { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 #000; }
+    #highscore-save-btn:active { transform: translate(4px,4px); box-shadow: 1px 1px 0 #000; }
 
     #celebration-scores {
       margin-top: .8rem;
       width: min(90vw, 360px);
+    }
+
+    /* ─── Progress label retro ─── */
+    #progress-label {
+      font-size: clamp(.5rem, 1.8vw, .7rem);
+      color: rgba(255,255,255,.4);
+    }
+
+    /* ─── Letter upper/lower retro ─── */
+    #letter-upper {
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    #letter-lower {
+      font-size: calc(var(--letter-size) * .18);
+      line-height: 1;
+      font-weight: 700;
+      color: rgba(255,255,255,.45);
+      margin-top: .15em;
+    }
+
+    /* ─── Welcome screen keyboard navigation ─── */
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    .welcome-section.kb-row-focus > .welcome-label::before {
+      content: '► ';
+      color: var(--accent);
+      animation: blink .7s step-end infinite;
+    }
+
+    .kb-btn-focus {
+      outline: 3px solid var(--accent) !important;
+      outline-offset: 2px;
+      animation: blink-btn .7s step-end infinite;
+    }
+
+    @keyframes blink-btn {
+      0%, 49% { outline-color: var(--accent); }
+      50%, 100% { outline-color: transparent; }
+    }
+
+    /* ─── Dot hover retro ─── */
+    .alpha-dot {
+      cursor: pointer;
+    }
+
+    .alpha-dot:hover {
+      background: rgba(255,255,255,.15);
+      transform: scale(1.12);
+    }
+
+    .alpha-dot:active {
+      transform: scale(.92);
+    }
+
+    /* ─── lang-btn smaller ─── */
+    .lang-btn {
+      padding: .3rem .45rem;
+      font-size: .9rem;
+      line-height: 1;
+    }
+
+    /* ─── GitHub star & sound toggle retro ─── */
+    #github-star {
+      position: fixed;
+      top: .8rem;
+      right: .8rem;
+      z-index: 100;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      text-decoration: none;
+      font-size: .55rem;
+    }
+
+    #sound-toggle {
+      position: fixed;
+      bottom: .8rem;
+      right: .8rem;
+      z-index: 100;
+      font-size: .9rem;
+      padding: .35rem .6rem;
+      line-height: 1;
     }
   </style>
 </head>
@@ -571,7 +719,7 @@
       <h1 id="welcome-title">🔤 Apprendre l'Alphabet</h1>
       <p id="welcome-desc">Apprends les lettres, les chiffres et les syllabes en t'amusant&nbsp;!</p>
 
-      <div class="welcome-section">
+      <div class="welcome-section" id="lang-section">
         <div class="welcome-label" id="lbl-lang">Langue</div>
         <div id="lang-toggle">
           <button class="mode-btn lang-btn active" data-lang="fr" aria-label="Français">🇫🇷</button>
@@ -586,7 +734,7 @@
         </div>
       </div>
 
-      <div class="welcome-section">
+      <div class="welcome-section" id="content-section">
         <div class="welcome-label" id="lbl-content">Que veux-tu apprendre&nbsp;?</div>
         <div id="content-toggle">
           <button class="mode-btn active" id="btn-letters" aria-label="Sélectionner les lettres">🔤 Lettres</button>
@@ -595,13 +743,13 @@
         </div>
       </div>
 
-      <div class="welcome-section">
+      <div class="welcome-section" id="mode-section">
         <div class="welcome-label" id="lbl-mode">Comment veux-tu jouer&nbsp;?</div>
         <div id="mode-toggle">
-          <button class="mode-btn active" id="btn-explore">🔍 Exploration</button>
-          <button class="mode-btn" id="btn-quiz">🎯 Devinette</button>
+          <button class="mode-btn" id="btn-explore">🔍 Exploration</button>
+          <button class="mode-btn active" id="btn-quiz">🎯 Devinette</button>
         </div>
-        <p id="welcome-mode-desc">Appuie sur les touches du clavier pour découvrir les lettres une par une.</p>
+        <p id="welcome-mode-desc">Trouve la lettre affichée avant que le temps soit écoulé&nbsp;!</p>
       </div>
 
       <div class="welcome-section" id="romaji-options-section" style="display:none">
@@ -612,7 +760,10 @@
         </div>
       </div>
 
-      <button id="start-btn">&#9654;&nbsp;Jouer&nbsp;!</button>
+      <div class="welcome-section" id="start-section">
+        <div class="welcome-label">PRESS ENTER</div>
+        <button id="start-btn">&#9654;&nbsp;Jouer&nbsp;!</button>
+      </div>
 
       <div class="welcome-section" id="highscores-section">
         <div class="welcome-label" id="lbl-highscores">🏆 Meilleurs scores</div>
@@ -1893,7 +2044,7 @@
     const BUZZ_FREQUENCY  = 180;
     const BUZZ_WAVEFORM   = 'sawtooth';
 
-    let quizMode          = false;
+    let quizMode          = true;
     let quizTarget        = '';
     let quizScore         = 0;
     let quizRemaining     = [];
@@ -1919,6 +2070,101 @@
 
     btnExplore.addEventListener('click', () => setMode('explore'));
     btnQuiz.addEventListener('click', () => setMode('quiz'));
+
+    // ─── Welcome screen keyboard navigation ─────────────────────────────────
+    // Rows: 0=lang, 1=content, 2=mode, 3=start
+    let welcomeFocusRow = 2; // default focus on mode row
+
+    const WEL_ROWS = [
+      {
+        sectionId: 'lang-section',
+        btns: () => [...document.querySelectorAll('.lang-btn')],
+        activeKey: () => currentLangKey,
+        activate: idx => document.querySelectorAll('.lang-btn')[idx]?.click(),
+      },
+      {
+        sectionId: 'content-section',
+        btns: () => [btnLetters, btnDigits, btnBoth],
+        activeKey: () => contentType,
+        activate: idx => [btnLetters, btnDigits, btnBoth][idx]?.click(),
+      },
+      {
+        sectionId: 'mode-section',
+        btns: () => [btnExplore, btnQuiz],
+        activeKey: () => quizMode ? 'quiz' : 'explore',
+        activate: idx => [btnExplore, btnQuiz][idx]?.click(),
+      },
+      {
+        sectionId: 'start-section',
+        btns: () => [startBtnEl],
+        activeKey: () => 'start',
+        activate: () => startBtnEl.click(),
+      },
+    ];
+
+    function getWelcomeRowActiveIdx(rowIdx) {
+      return WEL_ROWS[rowIdx].btns().findIndex(b => b.classList.contains('active'));
+    }
+
+    function updateWelcomeKbFocus() {
+      WEL_ROWS.forEach((row, ri) => {
+        const sec = document.getElementById(row.sectionId);
+        if (sec) sec.classList.toggle('kb-row-focus', ri === welcomeFocusRow);
+        row.btns().forEach(b => b.classList.remove('kb-btn-focus'));
+      });
+      // Highlight the active button in the focused row
+      const focusedBtns = WEL_ROWS[welcomeFocusRow].btns();
+      const activeIdx = getWelcomeRowActiveIdx(welcomeFocusRow);
+      const targetIdx = activeIdx >= 0 ? activeIdx : 0;
+      if (focusedBtns[targetIdx]) focusedBtns[targetIdx].classList.add('kb-btn-focus');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!welcomeScreen.classList.contains('show')) return;
+      // Don't intercept if typing in the name input
+      if (document.activeElement === document.getElementById('highscore-name-input')) return;
+
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          welcomeFocusRow = Math.max(0, welcomeFocusRow - 1);
+          updateWelcomeKbFocus();
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          welcomeFocusRow = Math.min(WEL_ROWS.length - 1, welcomeFocusRow + 1);
+          updateWelcomeKbFocus();
+          break;
+        case 'ArrowLeft':
+        case 'ArrowRight': {
+          e.preventDefault();
+          const row = WEL_ROWS[welcomeFocusRow];
+          const btns = row.btns();
+          if (btns.length <= 1) break;
+          const activeIdx = getWelcomeRowActiveIdx(welcomeFocusRow);
+          const cur = activeIdx >= 0 ? activeIdx : 0;
+          const dir = e.key === 'ArrowLeft' ? -1 : 1;
+          const newIdx = (cur + dir + btns.length) % btns.length;
+          row.activate(newIdx);
+          updateWelcomeKbFocus();
+          break;
+        }
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          if (welcomeFocusRow === WEL_ROWS.length - 1) {
+            startBtnEl.click();
+          } else {
+            // Activate focused button
+            const row = WEL_ROWS[welcomeFocusRow];
+            const btns = row.btns();
+            const activeIdx = getWelcomeRowActiveIdx(welcomeFocusRow);
+            const cur = activeIdx >= 0 ? activeIdx : 0;
+            row.activate(cur);
+          }
+          break;
+      }
+    });
 
     function updateRomajiToggleUI() {
       btnRomajiShow.classList.toggle('active', !hideRomaji);
@@ -2236,6 +2482,8 @@
       mobileRomajiInput.blur();
       renderHighscoresInWelcome();
       startMusic('welcome');
+      welcomeFocusRow = 2; // reset focus to mode row
+      updateWelcomeKbFocus();
     }
 
     startBtnEl.addEventListener('click', () => {
@@ -2271,6 +2519,7 @@
     updateProgress();
     renderHighscoresInWelcome();
     startMusic('welcome');
+    updateWelcomeKbFocus();
 
     // ─── GitHub star count ───────────────────────────────────────────────────
     fetch('https://api.github.com/repos/sunix/apprendre-alphabet')
