@@ -321,6 +321,17 @@
       text-decoration: none;
     }
 
+    /* ─── Sound toggle button (fixed, always visible) ─── */
+    #sound-toggle {
+      position: fixed;
+      bottom: .8rem;
+      right: .8rem;
+      z-index: 100;
+      font-size: 1.1rem;
+      padding: .35rem .6rem;
+      line-height: 1;
+    }
+
     /* ─── Welcome screen ─── */
     #welcome-screen {
       position: fixed;
@@ -531,6 +542,9 @@
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
+
+  <!-- ─── Sound toggle (fixed, always visible) ────────────────────── -->
+  <button id="sound-toggle" class="mode-btn" aria-label="Couper le son">🔊</button>
 
   <!-- ─── GitHub star (fixed, always visible) ─────────────────────── -->
   <a id="github-star" class="mode-btn" href="https://github.com/sunix/apprendre-alphabet" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">⭐ <span id="star-count" aria-live="polite" aria-label="star count">…</span></a>
@@ -1487,12 +1501,139 @@
     }
 
     function playCelebration() {
-      [0, 4, 7, 12].forEach((semi, i) => {
+      // Retro "level complete" jingle: C-E-G-C-E-G-C ascending run
+      const JINGLE_NOTE_DUR  = 0.18;
+      const JINGLE_FINAL_DUR = 0.55;
+      const notes = [0, 4, 7, 12, 16, 19, 24];
+      notes.forEach((semi, i) => {
         setTimeout(() => {
-          playTone(523.25 * Math.pow(1.059463, semi), 'triangle', 0.3);
-        }, i * 160);
+          const dur = i < notes.length - 1 ? JINGLE_NOTE_DUR : JINGLE_FINAL_DUR;
+          playTone(261.63 * Math.pow(1.059463094, semi), 'triangle', dur);
+        }, i * 110);
       });
     }
+
+    // ─── Background music (Web Audio API – no external files) ────────────────
+    let musicMuted  = localStorage.getItem('musicMuted') === '1';
+    let musicMode   = null;   // 'welcome' | 'explore' | 'quiz'
+    let musicStep   = 0;
+    let musicNextAt = 0;
+    let musicTimer  = null;
+
+    const NOTE_C4 = 261.63;
+    function noteHz(semi) { return NOTE_C4 * Math.pow(1.059463094, semi); }
+
+    // Music definitions: seq = array of [semitone_offset | null, beat_duration]
+    // null semitone = rest; semitone 0 = C4
+    const MUSIC = {
+      welcome: {
+        bpm: 60, wave: 'sine', vol: 0.07,
+        seq: [
+          // Gentle C-major arpeggios, calm and dreamy
+          [0,2],[4,2],[7,2],[12,2],
+          [0,2],[3,2],[7,2],[10,2],
+          [-3,2],[0,2],[5,2],[9,2],
+          [-1,2],[2,2],[7,2],[11,2],
+        ],
+      },
+      explore: {
+        bpm: 100, wave: 'triangle', vol: 0.07,
+        seq: [
+          // Cheerful adventure melody in C major
+          [0,1],[2,1],[4,1],[5,1],
+          [7,2],[5,1],[4,1],
+          [2,1],[0,1],[null,1],[7,1],
+          [5,1],[4,1],[2,2],
+          [0,1],[4,1],[7,1],[9,1],
+          [7,1],[5,1],[4,1],[2,1],
+          [0,2],[null,2],
+        ],
+      },
+      quiz: {
+        bpm: 132, wave: 'square', vol: 0.04,
+        seq: [
+          // Urgent, driving chiptune pattern
+          [0,.5],[4,.5],[7,.5],[12,.5],
+          [7,.5],[4,.5],[0,.5],[null,.5],
+          [2,.5],[5,.5],[9,.5],[14,.5],
+          [9,.5],[5,.5],[2,.5],[null,.5],
+          [4,.5],[7,.5],[11,.5],[14,.5],
+          [11,.5],[7,.5],[4,.5],[null,.5],
+          [0,.5],[7,.5],[0,.5],[7,.5],
+          [0,1],[null,1],
+        ],
+      },
+    };
+
+    function scheduleMusicNotes() {
+      if (!musicMode || musicMuted) return;
+      const m       = MUSIC[musicMode];
+      const beatSec = 60 / m.bpm;
+      const ahead   = 0.5; // schedule 0.5 s ahead
+      while (musicNextAt < audioCtx.currentTime + ahead) {
+        const [semi, beats] = m.seq[musicStep];
+        const dur = beats * beatSec;
+        if (semi !== null) {
+          const osc  = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.type = m.wave;
+          osc.frequency.setValueAtTime(noteHz(semi), musicNextAt);
+          gain.gain.setValueAtTime(0, musicNextAt);
+          gain.gain.linearRampToValueAtTime(m.vol, musicNextAt + Math.min(0.02, dur * 0.1));
+          gain.gain.setValueAtTime(m.vol, musicNextAt + dur * 0.65);
+          gain.gain.linearRampToValueAtTime(0, musicNextAt + dur * 0.9);
+          osc.start(musicNextAt);
+          osc.stop(musicNextAt + dur);
+        }
+        musicNextAt += dur;
+        musicStep = (musicStep + 1) % m.seq.length;
+      }
+    }
+
+    function startMusic(mode) {
+      if (mode === musicMode) return;
+      stopMusic();
+      musicMode = mode;
+      if (musicMuted) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      musicStep   = 0;
+      musicNextAt = audioCtx.currentTime + 0.1;
+      scheduleMusicNotes();
+      musicTimer = setInterval(scheduleMusicNotes, 200);
+    }
+
+    function stopMusic() {
+      if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+      musicMode = null;
+    }
+
+    function getCurrentMusicMode() {
+      return gameActive ? (quizMode ? 'quiz' : 'explore') : 'welcome';
+    }
+
+    const soundToggleBtn = document.getElementById('sound-toggle');
+
+    function applyMuteUI() {
+      soundToggleBtn.textContent = musicMuted ? '🔇' : '🔊';
+      soundToggleBtn.setAttribute('aria-label', musicMuted ? 'Activer le son' : 'Couper le son');
+    }
+
+    applyMuteUI();
+
+    soundToggleBtn.addEventListener('click', () => {
+      musicMuted = !musicMuted;
+      localStorage.setItem('musicMuted', musicMuted ? '1' : '0');
+      applyMuteUI();
+      if (musicMuted) {
+        stopMusic();
+      } else {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        musicMode = null; // force restart
+        startMusic(getCurrentMusicMode());
+      }
+    });
 
     // ─── Confetti ────────────────────────────────────────────────────────────
     const CONFETTI_COUNT_SMALL       = 25;  // per-letter burst
@@ -1660,12 +1801,12 @@
         quizMode = true;
         btnExplore.classList.remove('active');
         btnQuiz.classList.add('active');
-        if (gameActive) startQuiz();
+        if (gameActive) { startQuiz(); startMusic('quiz'); }
       } else {
         quizMode = false;
         btnExplore.classList.add('active');
         btnQuiz.classList.remove('active');
-        if (gameActive) { stopQuiz(); restart(); }
+        if (gameActive) { stopQuiz(); restart(); startMusic('explore'); }
       }
       updateWelcomeModeDesc();
       renderHighscoresInWelcome();
@@ -1852,8 +1993,10 @@
         confettiPieces = [];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         startQuiz();
+        startMusic('quiz');
       } else {
         restart();
+        startMusic('explore');
       }
     });
 
@@ -1956,6 +2099,7 @@
       welcomeScreen.classList.add('show');
       backBtnEl.style.display = 'none';
       renderHighscoresInWelcome();
+      startMusic('welcome');
     }
 
     startBtnEl.addEventListener('click', () => {
@@ -1964,7 +2108,7 @@
       backBtnEl.style.display = 'inline-block';
       exploreStartTime = null;
       buildDots();
-      if (quizMode) startQuiz(); else restart();
+      if (quizMode) { startQuiz(); startMusic('quiz'); } else { restart(); startMusic('explore'); }
     });
 
     backBtnEl.addEventListener('click', showWelcome);
@@ -1989,6 +2133,7 @@
     setLanguage(currentLangKey);
     updateProgress();
     renderHighscoresInWelcome();
+    startMusic('welcome');
 
     // ─── GitHub star count ───────────────────────────────────────────────────
     fetch('https://api.github.com/repos/sunix/apprendre-alphabet')
