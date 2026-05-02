@@ -1710,60 +1710,225 @@
     }
 
     // ─── Background music (Web Audio API – no external files) ────────────────
-    let musicMuted  = localStorage.getItem('musicMuted') === '1';
-    let musicMode   = null;   // 'welcome' | 'explore' | 'quiz'
-    let musicStep   = 0;
-    let musicNextAt = 0;
-    let musicTimer  = null;
+    let musicMuted       = localStorage.getItem('musicMuted') === '1';
+    let musicMode        = null;   // 'welcome' | 'explore' | 'quiz'
+    let musicTrackIdx    = 0;
+    let musicStep        = 0;
+    let musicNextAt      = 0;
+    let musicTimer       = null;
+    let musicRotateTimer = null;
+
+    const MUSIC_ROTATE_MS = 60_000; // rotate to the next track every ~1 minute
 
     const NOTE_C4 = 261.63;
     function noteHz(semi) { return NOTE_C4 * Math.pow(1.059463094, semi); }
 
-    // Music definitions: seq = array of [semitone_offset | null, beat_duration]
+    // Music definitions: each mode holds an array of tracks.
+    // Each track: { bpm, wave, vol, seq }
+    // seq = array of [semitone_offset | null, beat_duration]
     // null semitone = rest; semitone 0 = C4
     const MUSIC = {
-      welcome: {
-        bpm: 60, wave: 'sine', vol: 0.07,
-        seq: [
-          // Gentle C-major arpeggios, calm and dreamy
-          [0,2],[4,2],[7,2],[12,2],
-          [0,2],[3,2],[7,2],[10,2],
-          [-3,2],[0,2],[5,2],[9,2],
-          [-1,2],[2,2],[7,2],[11,2],
-        ],
-      },
-      explore: {
-        bpm: 100, wave: 'triangle', vol: 0.07,
-        seq: [
-          // Cheerful adventure melody in C major
-          [0,1],[2,1],[4,1],[5,1],
-          [7,2],[5,1],[4,1],
-          [2,1],[0,1],[null,1],[7,1],
-          [5,1],[4,1],[2,2],
-          [0,1],[4,1],[7,1],[9,1],
-          [7,1],[5,1],[4,1],[2,1],
-          [0,2],[null,2],
-        ],
-      },
-      quiz: {
-        bpm: 132, wave: 'square', vol: 0.04,
-        seq: [
-          // Urgent, driving chiptune pattern
-          [0,.5],[4,.5],[7,.5],[12,.5],
-          [7,.5],[4,.5],[0,.5],[null,.5],
-          [2,.5],[5,.5],[9,.5],[14,.5],
-          [9,.5],[5,.5],[2,.5],[null,.5],
-          [4,.5],[7,.5],[11,.5],[14,.5],
-          [11,.5],[7,.5],[4,.5],[null,.5],
-          [0,.5],[7,.5],[0,.5],[7,.5],
-          [0,1],[null,1],
-        ],
-      },
+      welcome: [
+        {
+          // Track 1: Gentle C-major arpeggios, calm and dreamy
+          bpm: 60, wave: 'sine', vol: 0.07,
+          seq: [
+            [0,2],[4,2],[7,2],[12,2],
+            [0,2],[3,2],[7,2],[10,2],
+            [-3,2],[0,2],[5,2],[9,2],
+            [-1,2],[2,2],[7,2],[11,2],
+          ],
+        },
+        {
+          // Track 2: Pentatonic daydream
+          bpm: 55, wave: 'sine', vol: 0.07,
+          seq: [
+            [0,3],[2,1],[4,2],[7,2],
+            [9,2],[7,2],[4,2],[2,2],
+            [0,3],[2,1],[4,2],[null,2],
+            [7,2],[4,2],[2,2],[0,4],
+          ],
+        },
+        {
+          // Track 3: Lullaby melody
+          bpm: 60, wave: 'sine', vol: 0.07,
+          seq: [
+            [4,3],[2,1],[0,2],[2,2],
+            [4,4],[null,2],[null,2],
+            [7,3],[5,1],[4,2],[2,2],
+            [0,4],[null,4],
+          ],
+        },
+        {
+          // Track 4: Peaceful descending bells
+          bpm: 58, wave: 'sine', vol: 0.07,
+          seq: [
+            [12,2],[9,2],[7,2],[5,2],
+            [4,2],[5,2],[7,2],[null,2],
+            [9,2],[7,2],[5,2],[4,2],
+            [2,2],[0,2],[null,4],
+          ],
+        },
+        {
+          // Track 5: Calm arpeggios with 7ths
+          bpm: 62, wave: 'sine', vol: 0.07,
+          seq: [
+            [9,2],[12,2],[16,2],[12,2],
+            [7,2],[11,2],[14,2],[11,2],
+            [5,2],[9,2],[12,2],[9,2],
+            [4,2],[7,2],[11,2],[7,2],
+            [0,4],[null,4],
+          ],
+        },
+      ],
+      explore: [
+        {
+          // Track 1: Cheerful adventure melody in C major
+          bpm: 100, wave: 'triangle', vol: 0.07,
+          seq: [
+            [0,1],[2,1],[4,1],[5,1],
+            [7,2],[5,1],[4,1],
+            [2,1],[0,1],[null,1],[7,1],
+            [5,1],[4,1],[2,2],
+            [0,1],[4,1],[7,1],[9,1],
+            [7,1],[5,1],[4,1],[2,1],
+            [0,2],[null,2],
+          ],
+        },
+        {
+          // Track 2: Mario-inspired bouncy overworld theme
+          bpm: 108, wave: 'triangle', vol: 0.07,
+          seq: [
+            [4,.5],[4,.5],[null,.5],[4,.5],[null,.5],[0,.5],[4,.5],[7,.5],
+            [12,2],[null,2],
+            [0,.5],[7,.5],[null,.5],[7,.5],[9,1],[7,1],
+            [5,.5],[null,.5],[4,.5],[null,.5],[0,.5],[null,.5],[-3,.5],[null,.5],
+            [0,1],[4,1],[7,1],[null,1],
+          ],
+        },
+        {
+          // Track 3: Tetris Type A inspired – classic block theme
+          bpm: 100, wave: 'triangle', vol: 0.07,
+          seq: [
+            [9,1],[11,1],[12,1.5],[14,.5],
+            [12,1],[9,1],[7,2],
+            [2,1],[5,1],[7,1.5],[9,.5],
+            [7,1],[5,1],[4,2],
+            [4,.5],[5,.5],[7,.5],[4,.5],[0,1],[null,1],
+            [2,.5],[5,.5],[9,.5],[7,.5],[5,1],[null,1],
+          ],
+        },
+        {
+          // Track 4: Adventure hop – ascending and descending scales
+          bpm: 112, wave: 'triangle', vol: 0.07,
+          seq: [
+            [7,1],[9,1],[11,1],[12,1],
+            [11,1],[9,1],[7,2],
+            [5,1],[7,1],[9,1],[11,1],
+            [9,1],[7,1],[5,2],
+            [4,.5],[5,.5],[7,.5],[9,.5],[11,1],[7,1],
+            [0,2],[null,2],
+          ],
+        },
+        {
+          // Track 5: Kirby-style bouncy
+          bpm: 104, wave: 'triangle', vol: 0.07,
+          seq: [
+            [0,1],[4,.5],[5,.5],[7,1],[5,1],
+            [4,1],[2,.5],[4,.5],[5,2],
+            [5,1],[7,.5],[9,.5],[11,1],[9,1],
+            [7,1],[5,.5],[7,.5],[9,2],
+            [9,.5],[7,.5],[5,.5],[4,.5],[2,1],[0,1],
+            [4,1],[7,1],[null,2],
+          ],
+        },
+        {
+          // Track 6: Fun march
+          bpm: 96, wave: 'triangle', vol: 0.07,
+          seq: [
+            [0,1],[2,.5],[4,.5],[5,1],[4,1],
+            [2,2],[null,2],
+            [7,1],[9,.5],[11,.5],[12,1],[11,1],
+            [9,2],[null,2],
+            [0,.5],[4,.5],[7,.5],[12,.5],[11,.5],[9,.5],[7,.5],[5,.5],
+            [4,1],[2,.5],[0,.5],[null,2],
+          ],
+        },
+      ],
+      quiz: [
+        {
+          // Track 1: Urgent, driving chiptune pattern
+          bpm: 132, wave: 'square', vol: 0.04,
+          seq: [
+            [0,.5],[4,.5],[7,.5],[12,.5],
+            [7,.5],[4,.5],[0,.5],[null,.5],
+            [2,.5],[5,.5],[9,.5],[14,.5],
+            [9,.5],[5,.5],[2,.5],[null,.5],
+            [4,.5],[7,.5],[11,.5],[14,.5],
+            [11,.5],[7,.5],[4,.5],[null,.5],
+            [0,.5],[7,.5],[0,.5],[7,.5],
+            [0,1],[null,1],
+          ],
+        },
+        {
+          // Track 2: Mario underground – dark, driving minor
+          bpm: 128, wave: 'square', vol: 0.04,
+          seq: [
+            [-5,.5],[null,.5],[-5,1],[-5,.5],[null,.5],
+            [-2,.5],[null,.5],[-3,.5],[null,.5],[-5,1],
+            [-1,.5],[null,.5],[-1,1],[-1,.5],[null,.5],
+            [4,.5],[null,.5],[3,.5],[null,.5],[2,.5],[null,.5],
+            [0,1],[7,.5],[0,.5],[null,1],
+          ],
+        },
+        {
+          // Track 3: Tetris high-speed – intense block drop
+          bpm: 140, wave: 'square', vol: 0.04,
+          seq: [
+            [9,1],[11,1],[12,.5],[14,.5],
+            [12,.5],[9,.5],[7,.5],[null,.5],[2,.5],[5,.5],
+            [7,.5],[9,.5],[7,.5],[5,.5],[4,.5],[null,.5],[0,.5],[4,.5],
+            [5,.5],[null,.5],[5,.5],[4,.5],[2,.5],[null,.5],[0,1],
+          ],
+        },
+        {
+          // Track 4: Pac-Man chase – chromatic pursuit
+          bpm: 138, wave: 'square', vol: 0.04,
+          seq: [
+            [0,.5],[2,.5],[3,.5],[5,.5],[7,.5],[8,.5],[10,.5],[12,.5],
+            [10,.5],[8,.5],[7,.5],[5,.5],[3,.5],[2,.5],[0,1],
+            [0,.5],[7,.5],[0,.5],[7,.5],[0,.5],[10,.5],[9,.5],[8,.5],
+            [7,1],[null,1],
+          ],
+        },
+        {
+          // Track 5: Space invaders – relentless descent
+          bpm: 136, wave: 'square', vol: 0.04,
+          seq: [
+            [7,.5],[9,.5],[11,.5],[12,.5],
+            [null,.5],[12,.5],[null,.5],[11,.5],
+            [9,.5],[7,.5],[5,.5],[4,.5],
+            [null,.5],[4,.5],[null,.5],[5,.5],
+            [7,1],[4,.5],[0,.5],
+            [7,.5],[9,.5],[7,.5],[5,.5],[4,1],[null,1],
+          ],
+        },
+        {
+          // Track 6: Mega Man – energetic action
+          bpm: 144, wave: 'square', vol: 0.04,
+          seq: [
+            [0,.5],[4,.5],[7,.5],[0,.5],[4,.5],[7,.5],[11,.5],[12,.5],
+            [11,.5],[9,.5],[7,.5],[null,.5],[7,.5],[5,.5],[4,.5],[null,.5],
+            [0,.5],[4,.5],[7,.5],[9,.5],[12,.5],[9,.5],[7,.5],[5,.5],
+            [4,.5],[2,.5],[0,.5],[null,.5],[0,1],[null,1],
+          ],
+        },
+      ],
     };
 
     function scheduleMusicNotes() {
       if (!musicMode || musicMuted) return;
-      const m       = MUSIC[musicMode];
+      const m       = MUSIC[musicMode][musicTrackIdx];
       const beatSec = 60 / m.bpm;
       const ahead   = 0.5; // schedule 0.5 s ahead
       while (musicNextAt < audioCtx.currentTime + ahead) {
@@ -1788,20 +1953,30 @@
       }
     }
 
+    function nextTrack() {
+      if (!musicMode) return;
+      const tracks = MUSIC[musicMode];
+      musicTrackIdx = (musicTrackIdx + 1) % tracks.length;
+      musicStep     = 0;
+    }
+
     function startMusic(mode) {
       if (mode === musicMode) return;
       stopMusic();
       musicMode = mode;
       if (musicMuted) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      musicStep   = 0;
-      musicNextAt = audioCtx.currentTime + 0.1;
+      musicTrackIdx    = 0;
+      musicStep        = 0;
+      musicNextAt      = audioCtx.currentTime + 0.1;
       scheduleMusicNotes();
-      musicTimer = setInterval(scheduleMusicNotes, 200);
+      musicTimer       = setInterval(scheduleMusicNotes, 200);
+      musicRotateTimer = setInterval(nextTrack, MUSIC_ROTATE_MS);
     }
 
     function stopMusic() {
-      if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+      if (musicTimer)       { clearInterval(musicTimer);       musicTimer = null; }
+      if (musicRotateTimer) { clearInterval(musicRotateTimer); musicRotateTimer = null; }
       musicMode = null;
     }
 
