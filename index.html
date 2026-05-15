@@ -150,10 +150,6 @@
       filter: drop-shadow(0 0 6px rgba(0,0,0,.65));
     }
 
-    #animal-text {
-      display: none;
-    }
-
     /* ─── Progress bar ─── */
     #progress-area {
       width: min(90vw, 700px);
@@ -803,7 +799,6 @@
       <span id="letter-lower"></span>
       <div id="animal-example" class="hidden" aria-live="polite">
         <img id="animal-image" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" />
-        <p id="animal-text"></p>
       </div>
     </div>
     <div id="quiz-timer-wrap"><div id="quiz-timer-bar"></div></div>
@@ -1521,12 +1516,12 @@
       '<rect x="22" y="6" width="1" height="1" fill="#ff4a57"/>' +
       '</svg>';
 
-    // Per-language examples: { langCode: { normalizedLetter: { text, alt, svg } } }
+    // Per-language examples: { langCode: { normalizedLetter: { ariaLabel, alt, speech, svg } } }
     // SVG values must remain trusted inline constants defined in source.
     const ANIMAL_EXAMPLES = {
       fr: {
         S: {
-          text: 'S comme Serpent !',
+          ariaLabel: 'S comme Serpent !',
           alt: 'Serpent en pixel art',
           speech: 'S comme serpent',
           svg: PIXEL_SERPENT_SVG,
@@ -1541,7 +1536,6 @@
       animalExample.removeAttribute('aria-label');
       animalImage.src = EMPTY_SVG_DATA_URI;
       animalImage.alt = '';
-      animalText.textContent = '';
     }
 
     function renderAnimalExample(ch) {
@@ -1556,11 +1550,10 @@
         return;
       }
 
-      const label = example.text || normalized;
+      const label = example.ariaLabel || example.speech || normalized;
       animalImage.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(example.svg)}`;
       animalImage.alt = example.alt || label;
       animalExample.setAttribute('aria-label', label);
-      animalText.textContent = label;
       animalExample.classList.remove('hidden');
     }
 
@@ -1612,7 +1605,6 @@
     const letterCard     = document.getElementById('letter-card');
     const animalExample  = document.getElementById('animal-example');
     const animalImage    = document.getElementById('animal-image');
-    const animalText     = document.getElementById('animal-text');
     const hint           = document.getElementById('hint');
     const progressLabel  = document.getElementById('progress-label');
     const alphabetRow    = document.getElementById('alphabet-row');
