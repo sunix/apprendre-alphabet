@@ -809,7 +809,7 @@
       <span id="letter-lower"></span>
     </div>
     <div id="animal-example" class="hidden" aria-live="polite">
-      <img id="animal-image" alt="" src="data:," aria-hidden="true" />
+      <img id="animal-image" alt="" src="data:," />
       <p id="animal-text"></p>
     </div>
     <div id="quiz-timer-wrap"><div id="quiz-timer-bar"></div></div>
@@ -1515,10 +1515,15 @@
       '<rect x="13" y="5" width="1" height="1" fill="#ff4a57"/>' +
       '</svg>';
 
-    // Per-language examples: { LANG_KEY: { UPPERCASE_LETTER: { name, svg } } }
+    // Per-language examples: { LANG_KEY: { UPPERCASE_LETTER: { text, alt, svg } } }
+    // SVG values must remain trusted inline constants defined in source.
     const ANIMAL_EXAMPLES = {
       fr: {
-        S: { name: 'Serpent', svg: PIXEL_SERPENT_SVG },
+        S: {
+          text: 'S comme Serpent !',
+          alt: 'Serpent en pixel art',
+          svg: PIXEL_SERPENT_SVG,
+        },
       },
     };
 
@@ -1526,6 +1531,7 @@
       animalExample.classList.add('hidden');
       animalExample.removeAttribute('aria-label');
       animalImage.src = 'data:,';
+      animalImage.alt = '';
       animalText.textContent = '';
     }
 
@@ -1541,9 +1547,10 @@
         return;
       }
 
-      const label = `${normalized} comme ${example.name} !`;
+      const label = example.text || normalized;
       const svgDataUriPrefix = 'data:image/svg+xml;charset=UTF-8,';
       animalImage.src = `${svgDataUriPrefix}${encodeURIComponent(example.svg)}`;
+      animalImage.alt = example.alt || label;
       animalExample.setAttribute('aria-label', label);
       animalText.textContent = label;
       animalExample.classList.remove('hidden');
