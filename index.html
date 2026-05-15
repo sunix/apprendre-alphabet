@@ -1567,11 +1567,13 @@
         entries[letter] = {
           ariaLabel: `${letter} comme ${animal} !`,
           alt: `${animal} en pixel art`,
-          speech: `${letter} comme ${animal.toLowerCase()}`,
+          speech: `${letter} comme ${animal}`,
           svg: buildPixelAnimalSvg(body, outline, inner, ear),
         };
       });
+      // Keep the custom snake silhouette for S to preserve the requested serpent-specific artwork.
       entries.S.svg = PIXEL_SERPENT_SVG;
+      entries.S.speech = 'S comme serpent';
       return entries;
     }
 
