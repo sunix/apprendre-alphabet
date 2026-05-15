@@ -1523,7 +1523,7 @@
       '<rect x="22" y="6" width="1" height="1" fill="#ff4a57"/>' +
       '</svg>';
 
-    // Builds a generic 24x24 pixel-art animal face with configurable palette.
+    // Builds a generic 24x24 pixel-art mascot with configurable palette.
     // body: primary fur/skin color; outline: external border; inner: muzzle area; ear: ear fill.
     function buildPixelAnimalSvg(body, outline, inner, ear) {
       return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges">' +
@@ -1558,6 +1558,13 @@
       ['#c9f9b8', '#588157', '#e8ffd6', '#f3ffea'],
       ['#f6bd60', '#bc6c25', '#ffe4aa', '#fff0cf'],
       ['#bdb2ff', '#5e548e', '#e6e1ff', '#f0edff'],
+      ['#ffadad', '#a4161a', '#ffd6d6', '#ffe8e8'],
+      ['#a0c4ff', '#1d3557', '#d7e7ff', '#ebf2ff'],
+      ['#b9fbc0', '#2d6a4f', '#ddffe2', '#ecffef'],
+      ['#ffafcc', '#8338ec', '#ffd9ea', '#ffeaf3'],
+      ['#fdffb6', '#6d6875', '#ffffdd', '#ffffef'],
+      ['#cae9ff', '#005f73', '#e7f5ff', '#f2faff'],
+      ['#caffbf', '#386641', '#e8ffd7', '#f3ffe9'],
     ];
 
     function buildFrenchAnimalExamples() {
@@ -1567,13 +1574,12 @@
         entries[letter] = {
           ariaLabel: `${letter} comme ${animal} !`,
           alt: `${animal} en pixel art`,
-          speech: `${letter} comme ${animal}`,
+          speech: letter === 'S' ? 'S comme serpent' : `${letter} comme ${animal}`,
           svg: buildPixelAnimalSvg(body, outline, inner, ear),
         };
       });
       // Keep the custom snake silhouette for S to preserve the requested serpent-specific artwork.
       entries.S.svg = PIXEL_SERPENT_SVG;
-      entries.S.speech = 'S comme serpent';
       return entries;
     }
 
