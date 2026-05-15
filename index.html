@@ -134,30 +134,24 @@
 
     /* ─── Animal example (letter association) ─── */
     #animal-example {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: .45rem;
-      text-align: center;
+      position: absolute;
+      right: .55rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
     }
 
-    #animal-example.hidden {
-      display: none;
-    }
+    #animal-example.hidden { display: none; }
 
     #animal-image {
-      width: 84px;
-      height: 84px;
-      border: 3px solid rgba(255,255,255,.35);
-      background: rgba(255,255,255,.06);
+      width: clamp(72px, 24%, 96px);
+      height: auto;
       image-rendering: pixelated;
+      filter: drop-shadow(0 0 6px rgba(0,0,0,.65));
     }
 
     #animal-text {
-      font-size: clamp(.55rem, 2vw, .8rem);
-      color: var(--accent);
-      text-shadow: 0 0 8px rgba(255,215,0,.4);
-      letter-spacing: .04em;
+      display: none;
     }
 
     /* ─── Progress bar ─── */
@@ -807,10 +801,10 @@
     <div id="letter-card">
       <span id="letter-upper">?</span>
       <span id="letter-lower"></span>
-    </div>
-    <div id="animal-example" class="hidden" aria-live="polite">
-      <img id="animal-image" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" />
-      <p id="animal-text"></p>
+      <div id="animal-example" class="hidden" aria-live="polite">
+        <img id="animal-image" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" />
+        <p id="animal-text"></p>
+      </div>
     </div>
     <div id="quiz-timer-wrap"><div id="quiz-timer-bar"></div></div>
     <p id="hint">Appuie sur une touche du clavier&nbsp;!</p>
@@ -1488,31 +1482,43 @@
     }
 
     const PIXEL_SERPENT_SVG =
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">' +
-      '<rect width="16" height="16" fill="#0d1020"/>' +
-      '<rect x="2" y="2" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="4" y="2" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="6" y="2" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="6" y="4" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="4" y="4" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="2" y="4" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="2" y="6" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="4" y="6" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="6" y="6" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="8" y="6" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="8" y="8" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="6" y="8" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="4" y="8" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="4" y="10" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="6" y="10" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="8" y="10" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="10" y="10" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="10" y="12" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="12" y="12" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="12" y="4" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="12" y="6" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="10" y="6" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="13" y="5" width="1" height="1" fill="#ff4a57"/>' +
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges">' +
+      '<rect width="24" height="24" fill="none"/>' +
+      '<rect x="15" y="4" width="4" height="1" fill="#0b4f2e"/>' +
+      '<rect x="14" y="5" width="7" height="1" fill="#0b4f2e"/>' +
+      '<rect x="14" y="6" width="8" height="1" fill="#0b4f2e"/>' +
+      '<rect x="15" y="7" width="6" height="1" fill="#0b4f2e"/>' +
+      '<rect x="14" y="8" width="6" height="1" fill="#0b4f2e"/>' +
+      '<rect x="11" y="9" width="8" height="1" fill="#0b4f2e"/>' +
+      '<rect x="8" y="10" width="10" height="1" fill="#0b4f2e"/>' +
+      '<rect x="6" y="11" width="9" height="1" fill="#0b4f2e"/>' +
+      '<rect x="5" y="12" width="8" height="1" fill="#0b4f2e"/>' +
+      '<rect x="4" y="13" width="8" height="1" fill="#0b4f2e"/>' +
+      '<rect x="4" y="14" width="9" height="1" fill="#0b4f2e"/>' +
+      '<rect x="5" y="15" width="10" height="1" fill="#0b4f2e"/>' +
+      '<rect x="8" y="16" width="10" height="1" fill="#0b4f2e"/>' +
+      '<rect x="11" y="17" width="9" height="1" fill="#0b4f2e"/>' +
+      '<rect x="15" y="18" width="6" height="1" fill="#0b4f2e"/>' +
+      '<rect x="18" y="19" width="4" height="1" fill="#0b4f2e"/>' +
+      '<rect x="16" y="5" width="4" height="1" fill="#31d98f"/>' +
+      '<rect x="16" y="6" width="5" height="1" fill="#31d98f"/>' +
+      '<rect x="16" y="7" width="4" height="1" fill="#31d98f"/>' +
+      '<rect x="15" y="8" width="4" height="1" fill="#31d98f"/>' +
+      '<rect x="12" y="9" width="6" height="1" fill="#31d98f"/>' +
+      '<rect x="9" y="10" width="8" height="1" fill="#31d98f"/>' +
+      '<rect x="7" y="11" width="7" height="1" fill="#31d98f"/>' +
+      '<rect x="6" y="12" width="6" height="1" fill="#31d98f"/>' +
+      '<rect x="5" y="13" width="6" height="1" fill="#31d98f"/>' +
+      '<rect x="5" y="14" width="7" height="1" fill="#31d98f"/>' +
+      '<rect x="6" y="15" width="8" height="1" fill="#31d98f"/>' +
+      '<rect x="9" y="16" width="8" height="1" fill="#31d98f"/>' +
+      '<rect x="12" y="17" width="7" height="1" fill="#31d98f"/>' +
+      '<rect x="16" y="18" width="4" height="1" fill="#31d98f"/>' +
+      '<rect x="19" y="19" width="2" height="1" fill="#31d98f"/>' +
+      '<rect x="18" y="6" width="1" height="1" fill="#06130d"/>' +
+      '<rect x="19" y="6" width="1" height="1" fill="#fff"/>' +
+      '<rect x="21" y="6" width="1" height="1" fill="#ff4a57"/>' +
+      '<rect x="22" y="6" width="1" height="1" fill="#ff4a57"/>' +
       '</svg>';
 
     // Per-language examples: { langCode: { normalizedLetter: { text, alt, svg } } }
@@ -1522,6 +1528,7 @@
         S: {
           text: 'S comme Serpent !',
           alt: 'Serpent en pixel art',
+          speech: 'S comme serpent',
           svg: PIXEL_SERPENT_SVG,
         },
       },
@@ -1795,7 +1802,10 @@
     function speakLetter(ch) {
       if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(ch.toLowerCase());
+      const normalized = normalizeKey(ch);
+      const example = ANIMAL_EXAMPLES[currentLangKey]?.[normalized];
+      const text = example?.speech || ch.toLowerCase();
+      const utter = new SpeechSynthesisUtterance(text);
       utter.lang = getLang().speechCode;
       utter.rate = 0.8;
       window.speechSynthesis.speak(utter);
