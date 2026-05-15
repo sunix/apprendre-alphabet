@@ -1550,7 +1550,7 @@
         return;
       }
 
-      const label = example.ariaLabel || example.speech || normalized;
+      const label = example.ariaLabel || normalized;
       animalImage.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(example.svg)}`;
       animalImage.alt = example.alt || label;
       animalExample.setAttribute('aria-label', label);
