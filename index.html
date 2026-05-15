@@ -808,7 +808,7 @@
       <span id="letter-upper">?</span>
       <span id="letter-lower"></span>
     </div>
-    <div id="animal-example" class="hidden" aria-live="polite" aria-label="">
+    <div id="animal-example" class="hidden" aria-live="polite">
       <img id="animal-image" alt="" src="data:," aria-hidden="true" />
       <p id="animal-text"></p>
     </div>
@@ -1522,11 +1522,9 @@
       },
     };
 
-    const SVG_DATA_URI_PREFIX = 'data:image/svg+xml;charset=UTF-8,';
-
     function clearAnimalExample() {
       animalExample.classList.add('hidden');
-      animalExample.setAttribute('aria-label', '');
+      animalExample.removeAttribute('aria-label');
       animalImage.src = 'data:,';
       animalText.textContent = '';
     }
@@ -1544,7 +1542,8 @@
       }
 
       const label = `${normalized} comme ${example.name} !`;
-      animalImage.src = `${SVG_DATA_URI_PREFIX}${encodeURIComponent(example.svg)}`;
+      const svgDataUriPrefix = 'data:image/svg+xml;charset=UTF-8,';
+      animalImage.src = `${svgDataUriPrefix}${encodeURIComponent(example.svg)}`;
       animalExample.setAttribute('aria-label', label);
       animalText.textContent = label;
       animalExample.classList.remove('hidden');
