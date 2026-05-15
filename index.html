@@ -70,6 +70,12 @@
     }
 
     /* ─── Big letter card ─── */
+    #letter-wrap {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
     #letter-card {
       position: relative;
       width: var(--letter-size);
@@ -134,10 +140,9 @@
 
     /* ─── Animal example (letter association) ─── */
     #animal-example {
-      position: absolute;
-      right: .55rem;
-      top: 50%;
-      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       pointer-events: none;
     }
 
@@ -794,9 +799,11 @@
   <button id="back-btn" class="mode-btn">⚙️ Options</button>
 
   <div id="stage">
-    <div id="letter-card">
-      <span id="letter-upper">?</span>
-      <span id="letter-lower"></span>
+    <div id="letter-wrap">
+      <div id="letter-card">
+        <span id="letter-upper">?</span>
+        <span id="letter-lower"></span>
+      </div>
       <div id="animal-example" class="hidden" aria-live="polite">
         <img id="animal-image" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" />
       </div>
@@ -1517,6 +1524,7 @@
       '</svg>';
 
     // Per-language examples: { langCode: { normalizedLetter: { ariaLabel, alt, speech, svg } } }
+    // speech is for TTS pronunciation; ariaLabel is for assistive-text announcement.
     // SVG values must remain trusted inline constants defined in source.
     const ANIMAL_EXAMPLES = {
       fr: {
