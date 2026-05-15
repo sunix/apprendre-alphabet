@@ -149,8 +149,8 @@
     #animal-example.hidden { display: none; }
 
     #animal-image {
-      width: clamp(72px, 9vw, 96px);
-      height: auto;
+      width: var(--letter-size);
+      height: var(--letter-size);
       image-rendering: pixelated;
       filter: drop-shadow(0 0 6px rgba(0,0,0,.65));
     }
@@ -1485,7 +1485,6 @@
 
     const PIXEL_SERPENT_SVG =
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges">' +
-      '<rect width="24" height="24" fill="none"/>' +
       '<rect x="15" y="4" width="4" height="1" fill="#0b4f2e"/>' +
       '<rect x="14" y="5" width="7" height="1" fill="#0b4f2e"/>' +
       '<rect x="14" y="6" width="8" height="1" fill="#0b4f2e"/>' +
@@ -1523,18 +1522,60 @@
       '<rect x="22" y="6" width="1" height="1" fill="#ff4a57"/>' +
       '</svg>';
 
+    function buildPixelAnimalSvg(body, outline, inner, ear) {
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges">' +
+        '<rect x="8" y="3" width="3" height="2" fill="' + outline + '"/>' +
+        '<rect x="13" y="3" width="3" height="2" fill="' + outline + '"/>' +
+        '<rect x="9" y="4" width="1" height="1" fill="' + ear + '"/>' +
+        '<rect x="14" y="4" width="1" height="1" fill="' + ear + '"/>' +
+        '<rect x="6" y="5" width="12" height="12" fill="' + outline + '"/>' +
+        '<rect x="7" y="6" width="10" height="10" fill="' + body + '"/>' +
+        '<rect x="9" y="9" width="2" height="2" fill="#09131f"/>' +
+        '<rect x="13" y="9" width="2" height="2" fill="#09131f"/>' +
+        '<rect x="10" y="10" width="1" height="1" fill="#ffffff"/>' +
+        '<rect x="14" y="10" width="1" height="1" fill="#ffffff"/>' +
+        '<rect x="10" y="12" width="4" height="2" fill="' + inner + '"/>' +
+        '<rect x="11" y="13" width="2" height="1" fill="#ff8fa3"/>' +
+        '</svg>';
+    }
+
+    const FR_ANIMAL_NAMES = {
+      A: 'Abeille', B: 'Baleine', C: 'Chat', D: 'Dauphin', E: 'Éléphant',
+      F: 'Flamant', G: 'Girafe', H: 'Hérisson', I: 'Iguane', J: 'Jaguar',
+      K: 'Koala', L: 'Lion', M: 'Mouton', N: 'Narval', O: 'Ours',
+      P: 'Panda', Q: 'Quokka', R: 'Renard', S: 'Serpent', T: 'Tortue',
+      U: 'Urubu', V: 'Vache', W: 'Wallaby', X: 'Xiphophore', Y: 'Yak', Z: 'Zèbre',
+    };
+
+    const FR_ANIMAL_PALETTES = [
+      ['#ffd166', '#b07a2a', '#ffe8a1', '#fff1bf'],
+      ['#90e0ef', '#247ba0', '#caf0f8', '#d9f7ff'],
+      ['#f8a5c2', '#b83b5e', '#ffd6e8', '#ffe4ef'],
+      ['#c9f9b8', '#588157', '#e8ffd6', '#f3ffea'],
+      ['#f6bd60', '#bc6c25', '#ffe4aa', '#fff0cf'],
+      ['#bdb2ff', '#5e548e', '#e6e1ff', '#f0edff'],
+    ];
+
+    function buildFrenchAnimalExamples() {
+      const entries = {};
+      Object.entries(FR_ANIMAL_NAMES).forEach(([letter, animal], idx) => {
+        const [body, outline, inner, ear] = FR_ANIMAL_PALETTES[idx % FR_ANIMAL_PALETTES.length];
+        entries[letter] = {
+          ariaLabel: `${letter} comme ${animal} !`,
+          alt: `${animal} en pixel art`,
+          speech: `${letter} comme ${animal.toLowerCase()}`,
+          svg: buildPixelAnimalSvg(body, outline, inner, ear),
+        };
+      });
+      entries.S.svg = PIXEL_SERPENT_SVG;
+      return entries;
+    }
+
     // Per-language examples: { langCode: { normalizedLetter: { ariaLabel, alt, speech, svg } } }
     // speech is for TTS pronunciation; ariaLabel is for assistive-text announcement.
     // SVG values must remain trusted inline constants defined in source.
     const ANIMAL_EXAMPLES = {
-      fr: {
-        S: {
-          ariaLabel: 'S comme Serpent !',
-          alt: 'Serpent en pixel art',
-          speech: 'S comme serpent',
-          svg: PIXEL_SERPENT_SVG,
-        },
-      },
+      fr: buildFrenchAnimalExamples(),
     };
 
     const EMPTY_SVG_DATA_URI = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
