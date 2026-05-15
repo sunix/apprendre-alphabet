@@ -132,6 +132,34 @@
 
     #hint.hidden { opacity: 0; }
 
+    /* ─── Animal example (letter association) ─── */
+    #animal-example {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .45rem;
+      text-align: center;
+    }
+
+    #animal-example.hidden {
+      display: none;
+    }
+
+    #animal-image {
+      width: 84px;
+      height: 84px;
+      border: 3px solid rgba(255,255,255,.35);
+      background: rgba(255,255,255,.06);
+      image-rendering: pixelated;
+    }
+
+    #animal-text {
+      font-size: clamp(.55rem, 2vw, .8rem);
+      color: var(--accent);
+      text-shadow: 0 0 8px rgba(255,215,0,.4);
+      letter-spacing: .04em;
+    }
+
     /* ─── Progress bar ─── */
     #progress-area {
       width: min(90vw, 700px);
@@ -779,6 +807,10 @@
     <div id="letter-card">
       <span id="letter-upper">?</span>
       <span id="letter-lower"></span>
+    </div>
+    <div id="animal-example" class="hidden" aria-live="polite">
+      <img id="animal-image" alt="" />
+      <p id="animal-text"></p>
     </div>
     <div id="quiz-timer-wrap"><div id="quiz-timer-bar"></div></div>
     <p id="hint">Appuie sur une touche du clavier&nbsp;!</p>
@@ -1455,6 +1487,58 @@
       return lowerCh !== ch ? lowerCh : '';
     }
 
+    const PIXEL_SERPENT_SVG =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">' +
+      '<rect width="16" height="16" fill="#0d1020"/>' +
+      '<rect x="2" y="2" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="4" y="2" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="6" y="2" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="6" y="4" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="4" y="4" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="2" y="4" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="2" y="6" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="4" y="6" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="6" y="6" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="8" y="6" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="8" y="8" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="6" y="8" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="4" y="8" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="4" y="10" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="6" y="10" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="8" y="10" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="10" y="10" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="10" y="12" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="12" y="12" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="12" y="4" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="12" y="6" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="10" y="6" width="2" height="2" fill="#2dde98"/>' +
+      '<rect x="13" y="5" width="1" height="1" fill="#fff"/>' +
+      '<rect x="13" y="5" width="1" height="1" fill="#ff4a57"/>' +
+      '</svg>';
+
+    const ANIMAL_EXAMPLES = {
+      fr: {
+        S: { name: 'Serpent', svg: PIXEL_SERPENT_SVG },
+      },
+    };
+
+    function renderAnimalExample(ch) {
+      const normalized = normalizeKey(ch);
+      const example = ANIMAL_EXAMPLES[currentLangKey]?.[normalized];
+      if (!example) {
+        animalExample.classList.add('hidden');
+        animalImage.removeAttribute('src');
+        animalImage.alt = '';
+        animalText.textContent = '';
+        return;
+      }
+
+      animalImage.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(example.svg)}`;
+      animalImage.alt = example.name;
+      animalText.textContent = `${normalized} comme ${example.name} !`;
+      animalExample.classList.remove('hidden');
+    }
+
     // ─── Palette: one colour per letter/digit ───────────────────────────────
     const COLORS = [
       // 26 letters (A–Z)
@@ -1501,6 +1585,9 @@
     const letterUpper    = document.getElementById('letter-upper');
     const letterLower    = document.getElementById('letter-lower');
     const letterCard     = document.getElementById('letter-card');
+    const animalExample  = document.getElementById('animal-example');
+    const animalImage    = document.getElementById('animal-image');
+    const animalText     = document.getElementById('animal-text');
     const hint           = document.getElementById('hint');
     const progressLabel  = document.getElementById('progress-label');
     const alphabetRow    = document.getElementById('alphabet-row');
@@ -2084,6 +2171,7 @@
       letterCard.classList.add('pop');
 
       hint.classList.add('hidden');
+      renderAnimalExample(ch);
       playLetterSound(index);
       speakLetter(ch);
       spawnConfetti(CONFETTI_COUNT_SMALL);
@@ -2483,6 +2571,7 @@
 
       hint.textContent = getQuizHint();
       hint.classList.remove('hidden');
+      renderAnimalExample(ch);
 
       playLetterSound(index);
       speakLetter(ch);
@@ -2566,6 +2655,7 @@
       letterUpper.textContent = '?';
       letterLower.textContent = '';
       letterCard.style.setProperty('--glow', 'transparent');
+      renderAnimalExample('');
       hint.textContent = getLang().hintExplore;
       hint.classList.remove('hidden');
       document.querySelector('#celebration p').textContent = getLang().celebText[contentType];
