@@ -809,7 +809,7 @@
       <span id="letter-lower"></span>
     </div>
     <div id="animal-example" class="hidden" aria-live="polite">
-      <img id="animal-image" alt="" />
+      <img id="animal-image" alt="Illustration d'animal" src="data:," />
       <p id="animal-text"></p>
     </div>
     <div id="quiz-timer-wrap"><div id="quiz-timer-bar"></div></div>
@@ -1512,7 +1512,6 @@
       '<rect x="12" y="4" width="2" height="2" fill="#2dde98"/>' +
       '<rect x="12" y="6" width="2" height="2" fill="#2dde98"/>' +
       '<rect x="10" y="6" width="2" height="2" fill="#2dde98"/>' +
-      '<rect x="13" y="5" width="1" height="1" fill="#fff"/>' +
       '<rect x="13" y="5" width="1" height="1" fill="#ff4a57"/>' +
       '</svg>';
 
@@ -1527,7 +1526,7 @@
       const example = ANIMAL_EXAMPLES[currentLangKey]?.[normalized];
       if (!example) {
         animalExample.classList.add('hidden');
-        animalImage.removeAttribute('src');
+        animalImage.src = 'data:,';
         animalImage.alt = '';
         animalText.textContent = '';
         return;
