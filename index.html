@@ -808,8 +808,8 @@
       <span id="letter-upper">?</span>
       <span id="letter-lower"></span>
     </div>
-    <div id="animal-example" class="hidden" aria-live="polite">
-      <img id="animal-image" alt="" src="data:," />
+    <div id="animal-example" class="hidden" aria-live="polite" aria-label="">
+      <img id="animal-image" alt="" src="data:," aria-hidden="true" />
       <p id="animal-text"></p>
     </div>
     <div id="quiz-timer-wrap"><div id="quiz-timer-bar"></div></div>
@@ -1522,27 +1522,31 @@
       },
     };
 
+    const SVG_DATA_URI_PREFIX = 'data:image/svg+xml;charset=UTF-8,';
+
+    function clearAnimalExample() {
+      animalExample.classList.add('hidden');
+      animalExample.setAttribute('aria-label', '');
+      animalImage.src = 'data:,';
+      animalText.textContent = '';
+    }
+
     function renderAnimalExample(ch) {
       if (!ch) {
-        animalExample.classList.add('hidden');
-        animalImage.src = 'data:,';
-        animalImage.alt = '';
-        animalText.textContent = '';
+        clearAnimalExample();
         return;
       }
       const normalized = normalizeKey(ch);
       const example = ANIMAL_EXAMPLES[currentLangKey]?.[normalized];
       if (!example) {
-        animalExample.classList.add('hidden');
-        animalImage.src = 'data:,';
-        animalImage.alt = '';
-        animalText.textContent = '';
+        clearAnimalExample();
         return;
       }
 
-      animalImage.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(example.svg)}`;
-      animalImage.alt = example.name;
-      animalText.textContent = `${normalized} comme ${example.name} !`;
+      const label = `${normalized} comme ${example.name} !`;
+      animalImage.src = `${SVG_DATA_URI_PREFIX}${encodeURIComponent(example.svg)}`;
+      animalExample.setAttribute('aria-label', label);
+      animalText.textContent = label;
       animalExample.classList.remove('hidden');
     }
 
